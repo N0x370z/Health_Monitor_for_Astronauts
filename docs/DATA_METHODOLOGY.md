@@ -111,12 +111,12 @@ normal    otherwise
 | R12 | Foreign keys and no duplicates | PASS |
 | R13 | Every injected anomaly raises at least one alert | PASS (8/8 events) |
 | R14 | Every area has citable real NASA data | PASS |
-| R15 | Thresholds verified against their source | WARN: 4 rows `needs_verification` |
+| R15 | Thresholds verified against their source | PASS (verified on 2026-11-14, see `DATA_SOURCES.md` §4) |
 
 ## 4. Limitations
 
 - The time series are synthetic. They show realistic patterns but are not measurements of real people.
-- Four thresholds are pending verification against the current NASA-STD-3001: cabin temperature, cabin pressure, and the 30-day and 1-year dose limits.
+- The 30-day and 1-year limits of NASA-STD-3001 are organ doses in mGy-Eq. The database stores dose in mSv, so that comparison is an approximation.
 - `SRC_PROJECT` thresholds are design heuristics and should be reviewed with medical advice.
 - Topic tagging and evidence linking use keyword rules. Some findings may be misclassified.
 - Raw LSDA data files were not downloaded, so the evidence is limited to published results and metadata.
@@ -139,6 +139,7 @@ python data/scripts/normalize_nasa.py --src "<cleaned catalog folder>"
 | 2026-11-14 | First database version: 41 metrics covering NASA's 5 spaceflight hazards (radiation, isolation, distance, gravity, environment) |
 | 2026-11-14 | Data CSV files removed from version control |
 | 2026-11-14 | Scope reduced to temperature, pressure, cardiovascular, SpO₂ and radiation (14 metrics). Reference tables moved to `data/scripts/reference_data.py`. The database file `data/health_monitor.sqlite` is now versioned. Sources and methodology documented |
+| 2026-11-14 | All citations and values verified against the original sources. Corrected: ACC/AHA guideline title, NEWS2, NASA-STD-3001 and ISS dose links, cabin temperature limits (18–27 °C). Cabin pressure band relabelled as a project heuristic. R15 now passes |
 
 ## 7. Tools
 
