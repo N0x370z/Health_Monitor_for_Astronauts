@@ -1,0 +1,17 @@
+crew_code,mission_code,role,baseline_hr,baseline_sbp,baseline_dbp,baseline_temp,baseline_resp,prior_career_dose_msv
+CREW-LEO-01,SIM-LEO,Commander,66,112,71,36.6,15,108.3
+CREW-LEO-02,SIM-LEO,Flight Engineer,69,113,73,36.5,14,80.9
+CREW-LEO-03,SIM-LEO,Medical Officer,58,114,75,36.7,14,94.3
+CREW-LEO-04,SIM-LEO,Mission Specialist,68,112,76,36.8,15,24.9
+CREW-MOON-01,SIM-MOON,Commander,69,116,70,36.5,16,96.6
+CREW-MOON-02,SIM-MOON,Flight Engineer,68,121,74,36.9,15,88.3
+CREW-MOON-03,SIM-MOON,Medical Officer,68,119,77,36.7,15,7.3
+CREW-MOON-04,SIM-MOON,Mission Specialist,61,115,70,36.6,14,44.5
+CREW-MARS-01,SIM-MARS,Commander,66,116,72,36.6,15,149.9
+CREW-MARS-02,SIM-MARS,Flight Engineer,66,119,71,36.8,14,60.7
+CREW-MARS-03,SIM-MARS,Medical Officer,70,120,74,36.8,16,124.2
+CREW-MARS-04,SIM-MARS,Mission Specialist,61,112,72,36.6,14,150.9
+CREW-RETURN-01,SIM-RETURN,Commander,69,116,75,36.7,16,73.4
+CREW-RETURN-02,SIM-RETURN,Flight Engineer,61,115,74,36.6,15,143.7
+CREW-RETURN-03,SIM-RETURN,Medical Officer,63,115,78,36.7,14,7.5
+CREW-RETURN-04,SIM-RETURN,Mission Specialist,59,120,76,36.7,14,61.1
