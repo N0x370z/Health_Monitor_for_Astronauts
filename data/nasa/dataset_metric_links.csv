@@ -1,0 +1,42 @@
+dataset_id,metric_code,use_es,machine_readable
+IDP-LSDA_DATASET-0000000000000177,cabin_co,Evento anómalo real (fuga en Kvant),True
+IDP-LSDA_DATASET-0000000000000600,cabin_co,Límites para alertas (SMAC),True
+IDP-LSDA_DATASET-0000000000001737,cabin_co,Límites para alertas (SMAC),True
+IDP-LSDA_DATASET-0000000000000406,heart_rate,Serie de tiempo en vuelo,True
+IDP-LSDA_DATASET-0000000000000406,resp_rate,Serie de tiempo en vuelo,True
+IDP-LSDA_DATASET-0000000000002003,cabin_co,Serie de tiempo en Mir,True
+IDP-LSDA_DATASET-0000000000001936,heart_rate,Pre/post vuelo humano,True
+IDP-LSDA_DATASET-0000000000001936,systolic_bp,Pre/post vuelo humano,True
+IDP-LSDA_DATASET-0000000000000009,body_mass_change_pct_month,Tendencia en misión larga,True
+IDP-LSDA_DATASET-0000000000001894,body_mass_change_pct_month,Tendencia en misión larga,True
+IDP-LSDA_DATASET-0000000000000012,radiation_dose_rate,Serie de tiempo,True
+IDP-LSDA_DATASET-0000000000002107,cabin_temp,Serie de tiempo en vuelo,True
+IDP-LSDA_DATASET-0000000000000706,cabin_temp,Serie de tiempo en vuelo,True
+IDP-LSDA_DATASET-0000000000000328,pvt_mean_rt,Serie de tiempo conductual,True
+IDP-LSDA_DATASET-0000000000000853,phq9_score,Aislamiento y confinamiento,True
+IDP-LSDA_DATASET-0000000000002221,cabin_co,Serie de tiempo 60 días,False
+IDP-LSDA_DATASET-0000000000002221,cabin_nh3,Serie de tiempo 60 días,False
+IDP-LSDA_DATASET-0000000000002171,heart_rate,Evento anómalo real para detectar,False
+IDP-LSDA_DATASET-0000000000001094,cabin_co2,"Serie de tiempo 30 días, tripulación encerrada",False
+IDP-LSDA_DATASET-0000000000001442,radiation_dose_rate,Serie de tiempo,False
+IDP-LSDA_DATASET-0000000000000773,radiation_dose_rate,Pico de radiación para alertas,False
+IDP-LSDA_DATASET-0000000000001369,radiation_dose_rate,Pico de radiación para alertas,False
+IDP-LSDA_DATASET-0000000000002384,radiation_dose_rate,Referencia según órbita,False
+IDP-LSDA_DATASET-0000000000001190,heart_rate,Serie de tiempo en vuelo,False
+IDP-LSDA_DATASET-0000000000001190,resp_rate,Serie de tiempo en vuelo,False
+IDP-LSDA_DATASET-0000000000000409,heart_rate,Umbral de tolerancia humano,False
+IDP-LSDA_DATASET-0000000000000409,hr_orthostatic_increase,Umbral de tolerancia humano,False
+IDP-LSDA_DATASET-0000000000000949,heart_rate,Serie de tiempo 4.5 h,False
+IDP-LSDA_DATASET-0000000000000949,resp_rate,Serie de tiempo 4.5 h,False
+IDP-LSDA_DATASET-0000000000000949,systolic_bp,Serie de tiempo 4.5 h,False
+IDP-LSDA_DATASET-0000000000000405,body_temp,Serie de tiempo en vuelo,False
+IDP-LSDA_DATASET-0000000000000405,heart_rate,Serie de tiempo en vuelo,False
+IDP-LSDA_DATASET-0000000000000405,resp_rate,Serie de tiempo en vuelo,False
+IDP-LSDA_DATASET-0000000000000405,systolic_bp,Serie de tiempo en vuelo,False
+IDP-LSDA_DATASET-0000000000001121,heart_rate,Respuesta cardiovascular humana,False
+IDP-LSDA_DATASET-0000000000001316,illumination,Referencia de luz en hábitat,False
+IDP-LSDA_DATASET-0000000000002360,sleep_duration,Referencia de sueño en hábitat aislado,False
+IDP-LSDA_DATASET-0000000000002317,sleep_duration,Referencia de sueño en hábitat aislado,False
+IDP-LSDA_DATASET-0000000000000989,radiation_dose_rate,Serie de tiempo,False
+IDP-LSDA_DATASET-0000000000001765,radiation_dose_rate,Serie de tiempo,False
+IDP-LSDA_DATASET-0000000000000674,body_temp,Referencia,False
