@@ -1,0 +1,42 @@
+metric_code,name_es,name_en,unit,domain_code,body_system,scope,sampling,description_es
+heart_rate,Frecuencia cardiaca,Heart rate,bpm,GRAV,cardiovascular,crew,5min,Latidos por minuto (palpitaciones/taquicardia/bradicardia).
+systolic_bp,Presión arterial sistólica,Systolic blood pressure,mmHg,GRAV,cardiovascular,crew,5min,Presión sistólica.
+diastolic_bp,Presión arterial diastólica,Diastolic blood pressure,mmHg,GRAV,cardiovascular,crew,5min,Presión diastólica.
+hr_orthostatic_increase,Aumento de FC al ponerse de pie,Orthostatic heart rate increase,bpm,GRAV,cardiovascular,crew,event,Aumento de FC supino->de pie en prueba ortostática (post-aterrizaje / gravedad parcial).
+sbp_orthostatic_drop,Caída de PAS al ponerse de pie,Orthostatic systolic drop,mmHg,GRAV,cardiovascular,crew,event,Caída de presión sistólica al ponerse de pie.
+spo2,Saturación de oxígeno,Oxygen saturation,%,ENV,respiratory,crew,5min,SpO2 por oximetría de pulso.
+resp_rate,Frecuencia respiratoria,Respiratory rate,breaths/min,ENV,respiratory,crew,5min,Respiraciones por minuto.
+body_temp,Temperatura corporal,Body temperature,°C,ENV,thermoregulation_immune,crew,5min,Temperatura central/timpánica; fiebre como señal de infección.
+sleep_duration,Duración del sueño,Sleep duration,h,ISO,sleep_circadian,crew,daily,Horas de sueño por actigrafía.
+sleep_efficiency,Eficiencia del sueño,Sleep efficiency,%,ISO,sleep_circadian,crew,daily,Tiempo dormido / tiempo en cama.
+sleep_latency,Latencia del sueño,Sleep latency,min,ISO,sleep_circadian,crew,daily,Minutos para quedarse dormido.
+pvt_mean_rt,Tiempo de reacción medio (PVT),PVT mean reaction time,ms,ISO,neurocognitive,crew,daily,Prueba de vigilancia psicomotora (fatiga).
+pvt_lapses,Lapsos de atención (PVT),PVT lapses,count,ISO,neurocognitive,crew,daily,Respuestas >500 ms en PVT de 3-5 min.
+phq9_score,Depresión (PHQ-9),Depression score (PHQ-9),points,ISO,mental_health,crew,weekly,Escala 0-27 autoaplicada.
+gad7_score,Ansiedad (GAD-7),Anxiety score (GAD-7),points,ISO,mental_health,crew,weekly,Escala 0-21 autoaplicada.
+radiation_dose_rate,Tasa de dosis de radiación,Radiation dose rate,mSv/day,RAD,radiation,environment,5min,Equivalente de dosis por día (dosímetro del módulo).
+dose_rate_spike_ratio,Pico de tasa de dosis,Dose-rate spike ratio,ratio,RAD,radiation,environment,5min,Tasa actual / mediana de las últimas 24 h (SAA o evento solar).
+radiation_dose_30d,Dosis acumulada 30 días,30-day dose,mSv,RAD,radiation,crew,daily,Equivalente de dosis acumulado en 30 días.
+radiation_dose_365d,Dosis acumulada 1 año,1-year dose,mSv,RAD,radiation,crew,daily,Equivalente de dosis acumulado en 365 días.
+radiation_dose_career,Dosis acumulada de carrera,Career dose,mSv,RAD,radiation,crew,mission,Dosis efectiva acumulada en la carrera.
+bmd_change_pct_month,Cambio de densidad mineral ósea,Bone mineral density change,%/month,GRAV,musculoskeletal,crew,monthly,Cambio mensual de DMO (cadera/columna).
+muscle_strength_change_pct,Cambio de fuerza muscular,Muscle strength change,%,GRAV,musculoskeletal,crew,weekly,Cambio vs línea base pre-vuelo.
+urinary_calcium,Calcio urinario,Urinary calcium,mg/day,GRAV,renal,crew,daily,Excreción de calcio en 24 h (resorción ósea / cálculos renales).
+exercise_minutes,Ejercicio diario,Daily exercise,min/day,GRAV,musculoskeletal,crew,daily,Minutos de contramedida (cinta/cicloergómetro/resistencia).
+motion_sickness_score,Mareo espacial,Space motion sickness score,0-10,GRAV,vestibular,crew,daily,Escala autoinformada 0-10 de náusea/mareo (oído interno).
+body_mass_change_pct_month,Cambio de masa corporal,Body mass change,%/month,DIST,nutrition,crew,monthly,Cambio mensual de masa corporal (aporte calórico y suministros).
+comm_delay_one_way,Retraso de comunicación,One-way communication delay,s,DIST,operations,environment,5min,Tiempo de ida de la señal Tierra-nave.
+cabin_co2,CO2 de cabina,Cabin CO2,mmHg,ENV,atmosphere,environment,5min,Presión parcial de CO2 (1 mmHg ~ 1316 ppm a 1 atm).
+cabin_o2,O2 de cabina,Cabin O2,%,ENV,atmosphere,environment,5min,Fracción de oxígeno a ~1 atm.
+cabin_temp,Temperatura de cabina,Cabin temperature,°C,ENV,atmosphere,environment,5min,Temperatura del aire del módulo.
+cabin_rh,Humedad relativa,Cabin relative humidity,%,ENV,atmosphere,environment,5min,Humedad relativa del aire.
+cabin_pressure,Presión de cabina,Cabin total pressure,kPa,ENV,atmosphere,environment,5min,Presión total del módulo (fugas).
+cabin_co,Monóxido de carbono,Carbon monoxide,ppm,ENV,atmosphere,environment,5min,Contaminante (combustión/pirólisis).
+cabin_nh3,Amoníaco,Ammonia,ppm,ENV,atmosphere,environment,5min,Contaminante (fuga de refrigerante).
+noise_level,Nivel de ruido,Noise level,dBA,ENV,habitability,environment,5min,Ruido continuo en el módulo.
+illumination,Iluminación,Illumination,lux,ENV,habitability,environment,5min,Nivel de luz (desempeño y ritmo circadiano).
+muscle_volume_change_pct,Cambio de volumen muscular (pierna),Leg muscle volume change,%,GRAV,musculoskeletal,crew,weekly,Cambio de volumen de pantorrilla/muslo vs línea base (atrofia).
+sot_equilibrium_score,Equilibrio postural (SOT),Postural equilibrium score (SOT),0-100,GRAV,vestibular,crew,daily,Puntaje compuesto de la prueba de organización sensorial (oído interno + visión + propiocepción).
+pss10_score,Estrés percibido (PSS-10),Perceived stress (PSS-10),points,ISO,mental_health,crew,weekly,Escala 0-40 autoaplicada.
+urinary_cortisol,Cortisol urinario,Urinary free cortisol,µg/24h,ISO,endocrine_stress,crew,daily,Marcador hormonal de estrés.
+hrv_rmssd,Variabilidad de la FC (RMSSD),Heart rate variability (RMSSD),ms,ISO,autonomic_stress,crew,daily,Medida matutina; baja con estrés y fatiga.
