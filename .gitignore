@@ -51,3 +51,12 @@ docker-compose.override.yml
 .DS_Store
 Thumbs.db
 *.swp
+
+# ── Base de datos generada y reporte ────────────
+data/db/
+
+# ── CSV de datos (no se versionan) ───────────────
+data/**/*.csv
+
+# ── Base de datos del monitor (sí se versiona) ───
+!data/health_monitor.sqlite
