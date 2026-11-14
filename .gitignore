@@ -1,0 +1,53 @@
+# ── Secretos y entorno ──────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── Python / FastAPI ────────────────────────────
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ── Node / React ────────────────────────────────
+node_modules/
+dist/
+build/
+.vite/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Base de datos local ─────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+pgdata/
+mysql-data/
+
+# ── Logs y temporales ───────────────────────────
+*.log
+logs/
+tmp/
+
+# ── Sentry / Docker ─────────────────────────────
+.sentryclirc
+docker-compose.override.yml
+
+# ── Editores y sistema operativo ────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
