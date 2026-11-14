@@ -1,113 +1,144 @@
 # Health Monitor for Astronauts
 
-> Dashboard for monitoring the health and wellbeing of astronauts on long-duration space missions, built on top of datasets and a shared database.
+> Cardiovascular health monitoring for astronauts on space missions, built on real NASA data and a shared database.
 
-Long-duration missions expose astronauts to space radiation, isolation and confinement, altered gravity, and a hostile closed environment. These conditions can lead to immune changes, bone loss, cardiovascular events, and behavioral health problems.
+Away from Earth's gravity the heart changes. Fluids shift to the head, plasma volume falls, the heart pumps less blood per beat and loses muscle mass. On returning to gravity, astronauts may faint when they stand up. NASA's 70-day bed rest study (CFT70) shows it clearly: without exercise, left ventricular mass fell **13.7 %** and stroke volume **14.3 %**, and heart rate rose **51 %** on getting up. With exercise countermeasures, those losses were much smaller.
 
-Our goal is to detect and prevent these problems early, before they develop into diseases or cause conflicts among the crew.
+Our goal is to **detect these problems early and prevent them**. The monitor combines:
+- continuous vital signs;
+- periodic echocardiography;
+- orthostatic tests;
+- radiation dose.
 
-> **Note:** No hardware is used. All data comes from datasets and a pre-existing database. This is an educational prototype, not a medical device.
+It turns them into alerts with a concrete recommended action.
+
+> **Note:** No hardware is used. All data comes from datasets and the project database. This is an educational prototype, not a medical device.
 
 ## Features
 
-- Dashboard with the last 24 hours of health metrics
-- Charts per metric: <heart rate, temperature, SpO₂, ...>
-- <Highlighted anomalies / abnormal values>
-- Optional error tracking with Sentry
+- **Crew overview:** every crew member ordered by risk, with heart rate, blood pressure, SpO₂ and temperature, plus the active alerts across all missions.
+- **Crew detail:**
+  - vital signs for the last 24 h with reference ranges;
+  - alerts with the recommended action and countermeasure;
+  - episodes of the last 24 h;
+  - echocardiography trend compared with the NASA CFT70 groups;
+  - resting heart rate, orthostatic tests, exercise adherence and radiation against NASA limits.
+- **Problems and prevention:** the 9 cardiovascular problems of spaceflight, why they happen, what the data shows and how to prevent them.
+- **CFT70 evidence:** 70-day bed rest results by group (Control vs exercise) for each echocardiography metric.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React, JavaScript, Recharts |
-| Backend | Python, FastAPI |
-| Database | SQLite (`data/health_monitor.sqlite`), schema portable to PostgreSQL |
-| Data | Synthetic data calibrated with clinical guidelines and NASA LSDA evidence (`data/`, `docs/DATA_SOURCES.md`) |
-| Error tracking | Sentry (optional) |
+| Frontend | React, JavaScript, Recharts, Vite |
+| Backend | Node.js 22, built-in modules only (`node:http`, `node:sqlite`). No framework, no dependencies |
+| Database | SQLite: `data/health_monitor.sqlite` (schema portable to PostgreSQL) |
+| Data | NASA CFT70 / BRSMCF echocardiography (real), NASA LSDA evidence (real), anonymous crew monitoring (synthetic, calibrated) |
 
 ## Architecture
 
 ```text
 ┌─────────────────────────────────────────────────┐
-│ React (Frontend)                                │
-│ ├── Recharts      → Dashboard                   │
-│ └── @sentry/react → JS errors (optional)        │
+│ React (Frontend) · Vite · Recharts              │
+│ ├── Crew overview and detail                    │
+│ ├── Problems and prevention                     │
+│ └── CFT70 evidence                              │
 │            │                                    │
-│            ▼ GET /api/metrics/last-24h          │
+│            ▼ GET /api/...  (JSON)               │
 ├─────────────────────────────────────────────────┤
-│ FastAPI (Backend)                               │
-│ ├── Reads metrics from the database             │
-│ └── sentry-sdk → Python errors (optional)       │
+│ Node.js (Backend, no framework)                 │
+│ ├── routes: crew, alerts, problems, study       │
+│ └── services/alerts.js → alerts, risk, episodes │
 ├─────────────────────────────────────────────────┤
-│ Database (SQLite / PostgreSQL)                  │
+│ SQLite (read-only)                              │
 │ └── data/health_monitor.sqlite                  │
 └─────────────────────────────────────────────────┘
 ```
 
 ## Data
 
-- **Database:** `data/health_monitor.sqlite` (SQLite, versioned in the repo; the schema in `data/schema.sql` also runs on PostgreSQL). Details in [`data/README.md`](data/README.md).
-- **Metrics used:** 14 metrics in five areas:
-  - temperature: body and cabin
-  - pressure: cabin, systolic and diastolic blood pressure
-  - cardiovascular: heart rate, palpitations, orthostatic response after a change of gravity
-  - oxygen saturation: SpO₂
-  - radiation: dose rate, spikes, 30-day, 1-year and career dose
-- **Source:** synthetic, anonymous crew and cabin data, calibrated with cited clinical guidelines and space radiation studies. Real, public evidence from the [NASA Life Sciences Data Archive](https://nlsp.nasa.gov/explore/data) (737 datasets, 207 experiments, 268 published findings). No personal data.
-- **Processing:** every measurement gets a `normal` / `warning` / `critical` status from the medical reference table. The last 24 h are sampled every 5 min; mission history is daily. Injected anomalies are labelled so alert logic can be evaluated.
-- **Sources and citations:** [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md). **Method and work record:** [`docs/DATA_METHODOLOGY.md`](docs/DATA_METHODOLOGY.md).
+- **Database:** `data/health_monitor.sqlite`. Tables are described in [`data/README.md`](data/README.md).
+- **Cardiovascular problems tracked:**
+  - orthostatic intolerance
+  - cardiac atrophy
+  - reduced stroke volume
+  - tachycardia and palpitations
+  - blood pressure dysregulation
+  - diastolic filling changes
+  - hypoxemia
+  - fever
+  - radiation-induced circulatory disease
+- **Real data:**
+  - NASA CFT70 / BRSMCF echocardiography: 37 subjects, 7 timepoints, 4 groups, 7,890 values.
+  - NASA Life Sciences Data Archive evidence: 829 datasets, 158 experiments, 241 findings.
+- **Synthetic data:** 16 anonymous crew members on 4 missions (low Earth orbit, Moon, Mars transit, return to Earth). Their trajectories are calibrated with CFT70, and 8 labelled events test the alerts.
+- **Monitoring and prevention logic:** [`docs/CARDIOVASCULAR_MONITORING.md`](docs/CARDIOVASCULAR_MONITORING.md)
+- **Sources and citations:** [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md)
+- **Method and work record:** [`docs/DATA_METHODOLOGY.md`](docs/DATA_METHODOLOGY.md)
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js >= <version>
-- Python >= 3.<x>
-- Access to the database
+- Node.js >= 22.13 (includes `node:sqlite`)
 
 ### Backend
 ```bash
 cd backend
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn main:app --reload
+cp .env.example .env    # optional
+npm start               # http://localhost:8000/api/health
+npm test                # 9 endpoint tests
 ```
 
 ### Frontend
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev             # http://localhost:5173 (proxies /api to the backend)
 ```
 
-## Environment Variables
+## Environment Variables (backend)
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | Database connection string |
-| `SENTRY_DSN` | Sentry DSN (optional) |
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `8000` | HTTP port |
+| `DB_PATH` | `../data/health_monitor.sqlite` | Path to the database |
+| `CORS_ORIGIN` | `*` | Allowed origin |
+| `TIME_SHIFT` | `true` | Shift demo timestamps so the last 24 h end at request time |
 
 ## API
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/metrics/last-24h` | Returns metrics from the last 24 hours |
+| GET | `/api/health` | Service status |
+| GET | `/api/metrics/last-24h?crew=&mission=&metric=` | Metrics from the last 24 hours (long format) |
+| GET | `/api/missions` | Missions |
+| GET | `/api/crew?mission=` | Crew with risk level, score and latest vital signs |
+| GET | `/api/crew/:code` | Crew detail: risk, active alerts with action, 24 h episodes, echocardiography |
+| GET | `/api/crew/:code/vitals?hours=&metric=` | Vital-sign time series (5 min) |
+| GET | `/api/crew/:code/history?metric=` | Daily history (resting HR, BP, exercise, orthostatic, echo, dose) |
+| GET | `/api/alerts?level=&mission=` | Active alerts for all crew, most severe first |
+| GET | `/api/problems` · `/api/problems/:code` | Cardiovascular problems with countermeasures, rules and evidence |
+| GET | `/api/reference` | Metrics, reference ranges, change thresholds, countermeasures, sources |
+| GET | `/api/study/cft70` · `/api/study/cft70/effects?metric=` | CFT70 study and change by group and timepoint |
 
 ## Project Structure
 
 ```text
-├── backend/
-├── frontend/
-├── data/          # database (health_monitor.sqlite), schema, scripts
-├── docs/          # data sources, citations and methodology
+├── backend/       # Node.js API (src/, test/)
+├── frontend/      # React dashboard (src/views, src/components)
+├── data/          # health_monitor.sqlite, schema.sql, queries.sql
+├── docs/          # monitoring logic, sources, methodology, files and changes, prompts
 └── README.md
 ```
 
+Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md). Useful prompts: [`docs/PROMPTS.md`](docs/PROMPTS.md).
+
 ## Future Work
 
-- Alerts for abnormal values
-- Longer history and filters per astronaut
-- Authentication
+- Error tracking with Sentry
+- Authentication and per-role views (crew, flight surgeon)
+- Live data ingestion from wearable devices
+- Medical review of the heuristic thresholds
 
 ## License
 
