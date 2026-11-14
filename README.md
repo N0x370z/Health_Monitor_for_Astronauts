@@ -133,6 +133,41 @@ npm run dev             # http://localhost:5173 (proxies /api to the backend)
 
 Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md). Useful prompts: [`docs/PROMPTS.md`](docs/PROMPTS.md).
 
+## Changelog
+
+### v3: cardiovascular focus (current)
+
+**Database**
+- Imported the NASA CFT70 / BRSMCF echocardiography files: 37 subjects, 7 timepoints, 4 groups, 7,890 values with quality flags.
+- Corrections made during the import:
+  - The two "7 Subjects" files were identical, so they were merged.
+  - A `0.0` value in the subset was treated as missing.
+  - The 3D column `LVSV` was identified as end-systolic volume; stroke volume and ejection fraction were derived from it.
+  - Analyst names were replaced by codes.
+- Added a cardiovascular knowledge base: 9 problems, 30 alert rules, 8 countermeasures backed by NASA evidence, and change-from-baseline thresholds derived from CFT70.
+- Recalibrated the synthetic crew with the CFT70 trajectories and added periodic echocardiography sessions and 8 labelled events.
+- Limited the NASA evidence to cardiovascular topics. Removed cabin temperature and pressure.
+
+**Code**
+- Removed the Python data scripts (`data/scripts/`, `data/requirements.txt`). The database is now the source of truth.
+- **Backend:** Node.js with built-in modules only, no FastAPI. It reads the database directly, applies the prevention logic (alerts, risk index, 24 h episodes) and includes 9 tests.
+- **Frontend:** React + Recharts. Views: crew overview, crew detail, problems and prevention, CFT70 evidence.
+
+**Docs**
+- New: [`CARDIOVASCULAR_MONITORING.md`](docs/CARDIOVASCULAR_MONITORING.md), [`FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md), [`PROMPTS.md`](docs/PROMPTS.md).
+- Updated: sources (4 new DOIs verified), methodology and the data README.
+
+### v2: verified scope
+- Scope reduced to temperature, pressure, cardiovascular, SpO₂ and radiation.
+- The database file became versioned and the data CSV files were removed from version control.
+- Every citation and value was verified against its original source. This corrected the cabin temperature limits and several links.
+
+### v1: first database
+- Cleaned the NASA LSDA catalog (2,593 → 2,390 health datasets) and enriched it through the NASA Life Sciences Portal.
+- First database with 41 metrics across NASA's 5 spaceflight hazards, plus synthetic crew data.
+
+Full details: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md) and [`docs/DATA_METHODOLOGY.md`](docs/DATA_METHODOLOGY.md).
+
 ## Future Work
 
 - Error tracking with Sentry
