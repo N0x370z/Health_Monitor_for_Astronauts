@@ -21,8 +21,8 @@ Our goal is to detect and prevent these problems early, before they develop into
 |---|---|
 | Frontend | React, JavaScript, Recharts |
 | Backend | Python, FastAPI |
-| Database | <PostgreSQL / MySQL> |
-| Data | Synthetic data calibrated with NASA LSDA results and clinical guidelines (`data/`) |
+| Database | SQLite (`data/health_monitor.sqlite`), schema portable to PostgreSQL |
+| Data | Synthetic data calibrated with clinical guidelines and NASA LSDA evidence (`data/`, `docs/DATA_SOURCES.md`) |
 | Error tracking | Sentry (optional) |
 
 ## Architecture
@@ -39,16 +39,23 @@ Our goal is to detect and prevent these problems early, before they develop into
 │ ├── Reads metrics from the database             │
 │ └── sentry-sdk → Python errors (optional)       │
 ├─────────────────────────────────────────────────┤
-│ Database (<PostgreSQL / MySQL>)                 │
-│ └── Metrics table loaded from datasets          │
+│ Database (SQLite / PostgreSQL)                  │
+│ └── data/health_monitor.sqlite                  │
 └─────────────────────────────────────────────────┘
 ```
 
 ## Data
 
-- **Source:** synthetic crew data calibrated with clinical guidelines and real, public results from the [NASA Life Sciences Data Archive](https://nlsp.nasa.gov) (no personal data). Details in [`data/README.md`](data/README.md).
-- **Metrics used:** 41 metrics across NASA's 5 spaceflight hazards: radiation (dose rate, spikes, cumulative dose), isolation and stress (sleep, reaction time, PHQ-9/GAD-7, PSS-10, cortisol, HRV), distance from Earth (communication delay, body mass), gravity (heart rate, blood pressure, bone, muscle strength and volume, urinary calcium, motion sickness, balance) and closed environment (SpO₂, body temperature, cabin CO₂/O₂/temperature/pressure/NH₃, light, noise).
-- **Processing:** the core table `data/reference/medical_reference.csv` defines normal and critical ranges per metric and mission context. `data/scripts/generate_synthetic.py` creates the last 24 h (every 5 min) ending at `--end` (use the current UTC time) plus the mission history, and labels injected anomalies. The schema is in `data/schema.sql` (PostgreSQL / SQLite).
+- **Database:** `data/health_monitor.sqlite` (SQLite, versioned in the repo; the schema in `data/schema.sql` also runs on PostgreSQL). Details in [`data/README.md`](data/README.md).
+- **Metrics used:** 14 metrics in five areas:
+  - temperature: body and cabin
+  - pressure: cabin, systolic and diastolic blood pressure
+  - cardiovascular: heart rate, palpitations, orthostatic response after a change of gravity
+  - oxygen saturation: SpO₂
+  - radiation: dose rate, spikes, 30-day, 1-year and career dose
+- **Source:** synthetic, anonymous crew and cabin data, calibrated with cited clinical guidelines and space radiation studies. Real, public evidence from the [NASA Life Sciences Data Archive](https://nlsp.nasa.gov/explore/data) (737 datasets, 207 experiments, 268 published findings). No personal data.
+- **Processing:** every measurement gets a `normal` / `warning` / `critical` status from the medical reference table. The last 24 h are sampled every 5 min; mission history is daily. Injected anomalies are labelled so alert logic can be evaluated.
+- **Sources and citations:** [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md). **Method and work record:** [`docs/DATA_METHODOLOGY.md`](docs/DATA_METHODOLOGY.md).
 
 ## Getting Started
 
@@ -91,7 +98,8 @@ npm run dev
 ```text
 ├── backend/
 ├── frontend/
-├── data/          # database: medical reference, synthetic data, NASA evidence, schema
+├── data/          # database (health_monitor.sqlite), schema, scripts
+├── docs/          # data sources, citations and methodology
 └── README.md
 ```
 
