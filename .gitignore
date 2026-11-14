@@ -57,3 +57,6 @@ data/db/
 
 # ── CSV de datos (no se versionan) ───────────────
 data/**/*.csv
+
+# ── Base de datos del monitor (sí se versiona) ───
+!data/health_monitor.sqlite
