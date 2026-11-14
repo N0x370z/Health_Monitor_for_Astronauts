@@ -22,6 +22,8 @@ Continuous physiological data from real astronauts is privacy-protected (NASA re
 | `GRAV` | Altered gravity | heart: `heart_rate`, `systolic_bp`, `hr_orthostatic_increase`; bone: `bmd_change_pct_month`, `urinary_calcium`; muscle: `muscle_strength_change_pct`, `muscle_volume_change_pct`; inner ear: `motion_sickness_score`, `sot_equilibrium_score` |
 | `ENV` | Hostile, closed environment | `cabin_co2`, `cabin_o2`, `cabin_temp`, `cabin_pressure`, `cabin_nh3`, `illumination`, `spo2`, `body_temp` |
 
+> **CSV files are not versioned** (`data/**/*.csv` is git-ignored). The layout below shows where they go locally. `generate_synthetic.py` and `reference_rows.py` recreate `synthetic/` and `medical_reference.csv`. The other reference tables and `nasa/` must be shared separately; they are also in the history of commits `4a58c51` and `211a32e` (`git checkout 211a32e -- data/nasa data/reference`).
+
 ## Layout
 
 ```text

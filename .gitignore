@@ -54,3 +54,6 @@ Thumbs.db
 
 # ── Base de datos generada y reporte ────────────
 data/db/
+
+# ── CSV de datos (no se versionan) ───────────────
+data/**/*.csv
