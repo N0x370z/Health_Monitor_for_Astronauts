@@ -1,72 +1,58 @@
--- Consultas de ejemplo (probadas en SQLite, SQL estándar válido en PostgreSQL)
+-- Consultas de ejemplo sobre data/health_monitor.sqlite (SQL estándar, válido en SQLite y PostgreSQL)
 
--- 1. RADIACIÓN: tasa de dosis y picos de las últimas 24 h por misión
-SELECT mission_code,
-       ROUND(AVG(CASE WHEN metric_code = 'radiation_dose_rate' THEN value END), 3) AS avg_msv_day,
-       MAX(CASE WHEN metric_code = 'radiation_dose_rate' THEN value END)           AS peak_msv_day,
-       MAX(CASE WHEN metric_code = 'dose_rate_spike_ratio' THEN value END)         AS peak_ratio,
-       SUM(CASE WHEN metric_code = 'dose_rate_spike_ratio' AND status = 'critical' THEN 1 ELSE 0 END) AS critical_points
-FROM measurement
-WHERE metric_code IN ('radiation_dose_rate', 'dose_rate_spike_ratio')
-GROUP BY mission_code;
+-- 1. PROBLEMAS: problemas cardiovasculares del vuelo espacial con sus contramedidas
+SELECT p.severity_rank, p.name_es AS problema, pc.role, c.name_es AS contramedida
+FROM cv_problem p
+JOIN problem_countermeasure pc ON pc.problem_code = p.problem_code
+JOIN countermeasure c ON c.countermeasure_code = pc.countermeasure_code
+ORDER BY p.severity_rank, pc.role;
 
--- 2. RADIACIÓN: dosis de carrera actual por tripulante vs límite de 600 mSv
-SELECT d.crew_code, d.value AS career_msv, ROUND(100.0 * d.value / 600, 1) AS pct_of_limit, d.status
-FROM daily_measurement d
-JOIN mission m ON m.mission_code = d.mission_code
-WHERE d.metric_code = 'radiation_dose_career' AND d.mission_day = m.current_mission_day
-ORDER BY career_msv DESC;
+-- 2. ESTUDIO CFT70: cambio medio vs antes del reposo, Control vs ejercicio, al día 70
+SELECT e.metric_code, e.group_code, e.n, ROUND(e.mean_pct_change, 1) AS pct_change
+FROM study_effect e
+WHERE e.timepoint_code = 'BR70'
+  AND e.metric_code IN ('lv_mass', 'stroke_volume', 'lvot_vti', 'hr_tdi_left', 'e_a_ratio', 'lvef')
+  AND e.group_code <> 'UNASSIGNED'
+ORDER BY e.metric_code, e.group_code;
 
--- 3. CARDIOVASCULAR: episodios de FC fuera de rango en reposo (palpitaciones, excluye ejercicio)
-SELECT crew_code, MIN(ts) AS first_ts, MAX(ts) AS last_ts, COUNT(*) AS points, MAX(value) AS max_bpm,
-       CASE MAX(CASE status WHEN 'critical' THEN 2 WHEN 'warning' THEN 1 ELSE 0 END)
-            WHEN 2 THEN 'critical' WHEN 1 THEN 'warning' ELSE 'normal' END AS worst_status
+-- 3. ESTUDIO CFT70: trayectoria de la masa del VI por grupo (todos los momentos)
+SELECT t.sort_order, e.timepoint_code, e.group_code, ROUND(e.mean_pct_change, 1) AS pct_change
+FROM study_effect e
+JOIN study_timepoint t ON t.timepoint_code = e.timepoint_code
+WHERE e.metric_code = 'lv_mass' AND e.group_code <> 'UNASSIGNED'
+ORDER BY e.group_code, t.sort_order;
+
+-- 4. MONITOREO: últimos signos vitales de cada tripulante
+SELECT crew_code, metric_code, value, status, ts
+FROM v_latest_vitals
+ORDER BY crew_code, metric_code;
+
+-- 5. MONITOREO: palpitaciones (FC fuera de rango en reposo) en las últimas 24 h
+SELECT crew_code, MIN(ts) AS first_ts, MAX(ts) AS last_ts, COUNT(*) AS points, MAX(value) AS max_bpm
 FROM measurement
 WHERE metric_code = 'heart_rate' AND activity <> 'exercise' AND status <> 'normal'
 GROUP BY crew_code
 ORDER BY max_bpm DESC;
 
--- 4. CARDIOVASCULAR: presión arterial media diaria fuera de rango (últimos 10 días)
-SELECT d.crew_code, d.mission_day, d.metric_code, d.value, d.status
+-- 6. MONITOREO: último ecocardiograma de cada tripulante comparado con su línea base
+SELECT d.crew_code, d.metric_code, d.value, d.pct_change_from_baseline, d.status
 FROM daily_measurement d
-JOIN mission m ON m.mission_code = d.mission_code
-WHERE d.metric_code IN ('systolic_bp', 'diastolic_bp') AND d.status <> 'normal'
-  AND d.mission_day > m.current_mission_day - 10
-ORDER BY d.crew_code, d.mission_day;
+JOIN (SELECT crew_code, metric_code, MAX(mission_day) AS last_day FROM daily_measurement
+      WHERE metric_code IN ('lv_mass', 'stroke_volume', 'lvot_vti', 'e_a_ratio') GROUP BY 1, 2) l
+  ON l.crew_code = d.crew_code AND l.metric_code = d.metric_code AND l.last_day = d.mission_day
+ORDER BY d.crew_code, d.metric_code;
 
--- 5. TEMPERATURA y SpO2: puntos fuera de rango en las últimas 24 h
-SELECT COALESCE(crew_code, mission_code || ' (cabina)') AS subject, metric_code,
-       COUNT(*) AS points, MIN(value) AS min_value, MAX(value) AS max_value
-FROM measurement
-WHERE metric_code IN ('body_temp', 'cabin_temp', 'spo2') AND status <> 'normal'
-GROUP BY 1, 2
-ORDER BY 1;
+-- 7. PREVENCIÓN: reglas que se activan con el estado actual y la acción recomendada
+SELECT d.crew_code, r.level, r.condition_es, r.action_es, c.name_es AS contramedida
+FROM daily_measurement d
+JOIN (SELECT crew_code, metric_code, MAX(mission_day) AS last_day FROM daily_measurement GROUP BY 1, 2) l
+  ON l.crew_code = d.crew_code AND l.metric_code = d.metric_code AND l.last_day = d.mission_day
+JOIN alert_rule r ON r.metric_code = d.metric_code AND r.level = d.status
+LEFT JOIN countermeasure c ON c.countermeasure_code = r.countermeasure_code
+ORDER BY CASE r.level WHEN 'critical' THEN 0 ELSE 1 END, d.crew_code;
 
--- 6. PRESIÓN DE CABINA: caída máxima por misión (fugas)
-SELECT mission_code, MIN(value) AS min_kpa, MAX(value) AS max_kpa,
-       SUM(CASE WHEN status <> 'normal' THEN 1 ELSE 0 END) AS alert_points
-FROM measurement
-WHERE metric_code = 'cabin_pressure'
-GROUP BY mission_code;
-
--- 7. Rango de referencia + fuente para una métrica (lo que el dashboard muestra junto a la alerta)
-SELECT r.metric_code, r.context, r.normal_min, r.normal_max, r.critical_low, r.critical_high,
-       r.confidence, s.citation
-FROM medical_reference r
-JOIN source s ON s.source_id = r.primary_source_id
-WHERE r.metric_code = 'heart_rate';
-
--- 8. Evidencia NASA real para respaldar una alerta
-SELECT DISTINCT experiment_id, experiment_title, finding_text
-FROM v_metric_evidence
-WHERE metric_code = 'hr_orthostatic_increase' AND is_quantitative
+-- 8. EVIDENCIA: hallazgos NASA que respaldan un problema
+SELECT experiment_id, experiment_title, finding_text
+FROM v_problem_evidence
+WHERE problem_code = 'ORTHOSTATIC_INTOLERANCE' AND is_quantitative
 LIMIT 5;
-
--- 9. Evaluar un detector: ¿cuántos puntos de cada evento inyectado quedaron como alerta?
-SELECT e.event_id, e.event_type, x.metric_code,
-       SUM(CASE WHEN x.status <> 'normal' THEN 1 ELSE 0 END) AS flagged, COUNT(*) AS total
-FROM event e
-JOIN (SELECT event_id, metric_code, status FROM measurement
-      UNION ALL SELECT event_id, metric_code, status FROM daily_measurement) x ON x.event_id = e.event_id
-GROUP BY e.event_id, e.event_type, x.metric_code
-ORDER BY e.event_id;
