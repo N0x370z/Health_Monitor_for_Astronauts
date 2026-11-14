@@ -1,10 +1,11 @@
 -- Health Monitor for Astronauts — esquema normalizado (3FN)
--- SQL portable: funciona en PostgreSQL y en SQLite (data/scripts/build_db.py).
+-- Alcance: temperatura, presión, cardiovascular, saturación de oxígeno y radiación.
+-- SQL portable: funciona en PostgreSQL y en SQLite (data/scripts/build_db.py -> data/health_monitor.sqlite).
 -- Orden de carga = orden de este archivo (respeta llaves foráneas).
 
 -- ════════════════════ 1. Referencia médica (corazón) ════════════════════
 CREATE TABLE risk_domain (
-    domain_code     TEXT PRIMARY KEY,           -- RAD, ISO, DIST, GRAV, ENV (5 riesgos NASA)
+    domain_code     TEXT PRIMARY KEY,           -- RAD, GRAV, ENV (riesgos NASA dentro del alcance)
     name_es         TEXT NOT NULL,
     name_en         TEXT NOT NULL,
     description_es  TEXT
@@ -73,7 +74,6 @@ CREATE TABLE crew_member (                       -- sin nombre, edad ni datos pe
     baseline_sbp           REAL,
     baseline_dbp           REAL,
     baseline_temp          REAL,
-    baseline_resp          REAL,
     prior_career_dose_msv  REAL
 );
 
@@ -181,7 +181,7 @@ CREATE TABLE nasa_dataset_experiment (
     PRIMARY KEY (dataset_id, experiment_key)
 );
 
-CREATE TABLE nasa_evidence_finding (            -- oraciones de RESULTS clasificadas
+CREATE TABLE nasa_evidence_finding (            -- oraciones de RESULTS ligadas a una métrica
     finding_id       TEXT PRIMARY KEY,
     experiment_key   TEXT NOT NULL REFERENCES nasa_experiment(experiment_key),
     domain_code      TEXT NOT NULL REFERENCES risk_domain(domain_code),
@@ -195,7 +195,7 @@ CREATE TABLE nasa_evidence_finding (            -- oraciones de RESULTS clasific
 CREATE INDEX ix_evidence_metric ON nasa_evidence_finding (metric_code);
 CREATE INDEX ix_evidence_domain ON nasa_evidence_finding (domain_code);
 
-CREATE TABLE nasa_dataset_metric_link (         -- datasets reales útiles para cada métrica del monitor
+CREATE TABLE nasa_dataset_metric_link (         -- datasets reales relacionados con cada métrica del monitor
     dataset_id        TEXT NOT NULL REFERENCES nasa_dataset(dataset_id),
     metric_code       TEXT NOT NULL REFERENCES metric(metric_code),
     use_es            TEXT,
