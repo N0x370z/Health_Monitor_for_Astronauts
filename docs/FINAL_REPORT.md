@@ -70,8 +70,8 @@ Bed rest and spaceflight cause the same two problems this system tracks: cardiac
   - DXA: precision comes from repeated scans (Glüer et al., 1995), and the least significant change is 2.77 × precision (Baim et al., 2005).
 
 **Design inspiration.**
-- **SpaceGenes+ (Space Apps 2025).** This project from the 2025 challenge *Build a Space Biology Knowledge Engine* turns NASA GeneLab data (OSD-288) into an interactive dashboard of how radiation, microgravity and both together affect the body. We used it as a reference for turning a NASA archive into a dashboard that people can read. Our focus is different: it looks at gene expression in mice, and we look at heart and bone health in people.
-- **Consumer wearables.** Apps for Garmin-style watches and fitness bands inspired the charts, the daily check-in and the badges. We moved that experience from everyday users to astronauts and to cardiovascular and bone risks.
+- **SpaceGenes+ (Space Apps 2025).** This project from the 2025 challenge *Build a Space Biology Knowledge Engine* turns NASA GeneLab data (OSD-288) into an interactive dashboard of how radiation, microgravity and both together affect the body. We used it as a reference for turning a NASA archive into a dashboard that people can read, and its page design as the style reference for our web app. Our focus is different: it looks at gene expression in mice, and we look at heart and bone health in people.
+- **Consumer wearables.** The Garmin app for its watches, and similar apps for fitness bands, inspired the charts, the daily check-in and the badges. We moved that experience from everyday users to astronauts and to cardiovascular and bone risks.
 
 **Gap addressed.** Published studies report group averages. Few tools apply these error thresholds per subject and turn them into actions. None we found combine cardiac and bone data from the public NASA archives in one open, reproducible system.
 
@@ -301,11 +301,11 @@ Future work:
 
 ## Use of AI Tools
 
-As the Space Apps rules require, we state where AI tools were used. Each part of the team used an AI coding assistant for its own work. The prompts are kept in [`prompts/`](prompts/).
+As the Space Apps rules require, we state where AI tools were used. The whole team used one AI tool: **Claude** (Anthropic). No other AI tool was used. The prompts are kept in [`prompts/`](prompts/).
 
 | Part of the project | What the assistant helped with | Prompts |
 | --- | --- | --- |
-| Database, backend and data mining | Cleaning and exploring the NASA files, checking citations and DOIs, the database schema, the Node.js API, statistics and tests, bone-density import, deploying on Vercel, documentation and this report (Claude, by Anthropic, through Claude Code) | [`PROMPTS_DATA_BACKEND.md`](prompts/PROMPTS_DATA_BACKEND.md) |
+| Database, backend and data mining | Cleaning and exploring the NASA files, checking citations and DOIs, the database schema, the Node.js API, statistics and tests, bone-density import, deploying on Vercel, documentation and this report | [`PROMPTS_DATA_BACKEND.md`](prompts/PROMPTS_DATA_BACKEND.md) |
 | Early-warning validation | Choosing the data-mining methods, auditing the NLSP tables, writing `mining.js` (AUC with bootstrap and permutation, leave-one-subject-out ridge logistic regression, Brier score, Mahalanobis distance, CUSUM) and connecting it to the API | [`PROMPTS_EARLY_WARNING.md`](prompts/PROMPTS_EARLY_WARNING.md) |
 | Front end (ORBIT CARE) | Data layer and clinical formulas, heart status engine, layout from reference images (see Appendix D), interactive heart, random subject, gap filling, simulated live pulse, SpO₂ and ECG, daily check-in, guided tour, checks before each commit | [`PROMPTS_FRONTEND.md`](prompts/PROMPTS_FRONTEND.md) |
 
@@ -387,6 +387,6 @@ All tools are open source or free to use.
 | [ESLint 9](https://eslint.org) | Front-end code checks | MIT |
 | [Vercel](https://vercel.com) | Hosting of the web app and API | Free tier |
 | [GitHub](https://github.com/N0x370z/Health_Monitor_for_Astronauts) | Code and data repository | — |
-| Visual references (style only, not copied into the app) | A health-manager app design, a photo of a health screen on the International Space Station, and GitHub's guided-tour tooltip | — |
+| Visual references (style only, not copied into the app) | The [SpaceGenes+ project page](https://www.spaceappschallenge.org/2025/find-a-team/spacegenes/?tab=project) (Space Apps 2025) and the Garmin watch app | — |
 
 Charts and icons are drawn with our own inline SVG; no chart or icon library is used.
