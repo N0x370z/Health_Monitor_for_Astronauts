@@ -1,27 +1,53 @@
-import { all, get } from '../db.js';
+import { all } from '../db.js';
+import {
+  correlations, countermeasureSummary, effects, phenotypes, predictors, reliability,
+} from '../services/analytics.js';
+import { BASELINE, findMetric, findTimepoint, groups, metricInfo, study, subjects, timepoints } from '../services/dataset.js';
 import { HttpError } from '../http.js';
 
-const KEY_METRICS = ['lv_mass', 'stroke_volume', 'lvedv', 'lvot_vti', 'hr_tdi_left', 'e_a_ratio', 'lvef', 'e_e_prime_ratio'];
+// Los análisis de cambio no tienen sentido en la línea base (todo cambio es 0 %).
+function changeTimepoint(code) {
+  const tp = findTimepoint(code ?? 'BR70');
+  if (tp.timepoint_code === BASELINE) throw new HttpError(400, 'Pre es la línea base: elige un momento posterior (D7…R+3)');
+  return tp.timepoint_code;
+}
+
+const KEY_METRICS = ['lv_mass', 'stroke_volume', 'lvedv', 'lvot_vti', 'hr_tdi_left', 'cardiac_output', 'e_a_ratio', 'lvef', 'e_e_prime_avg', 'tei_index'];
 
 export function register(router) {
   router.get('/api/study/cft70', () => ({
-    study: get('SELECT * FROM study WHERE study_code = ?', 'CFT70'),
-    groups: all(`SELECT g.*, COUNT(s.subject_code) AS subjects FROM study_group g
-                 LEFT JOIN study_subject s USING (group_code) GROUP BY g.group_code ORDER BY g.group_code`),
-    timepoints: all('SELECT * FROM study_timepoint ORDER BY sort_order'),
-    key_metrics: all(`SELECT metric_code, name_es, unit, problem_code FROM metric
-                      WHERE metric_code IN (${KEY_METRICS.map(() => '?').join(',')})`, ...KEY_METRICS),
-    data_quality: all(`SELECT quality_flag, COUNT(*) AS n FROM study_echo_measurement GROUP BY quality_flag`),
+    study,
+    groups: groups.map((g) => ({ ...g, subjects: subjects.filter((s) => s.group_code === g.group_code).length })),
+    timepoints,
+    key_metrics: KEY_METRICS.map((m) => ({ ...metricInfo(m), problem_code: findMetric(m).problem_code })),
+    data_quality: all('SELECT quality_flag, COUNT(*) AS n FROM study_echo_measurement GROUP BY quality_flag'),
   }));
 
-  // Serie de cambio medio (%) vs antes del reposo por grupo, para comparar con la tripulación.
+  // Cambio medio (%) vs antes del reposo por grupo y momento, con IC 95 %, prueba t y g de Hedges vs Control.
   router.get('/api/study/cft70/effects', (_, query) => {
     const metric = query.get('metric') ?? 'lv_mass';
-    if (!get('SELECT 1 FROM metric WHERE metric_code = ?', metric)) throw new HttpError(400, `Métrica no válida: ${metric}`);
-    return all(
-      `SELECT e.group_code, g.name_es AS group_name, e.timepoint_code, t.day_offset, t.sort_order, t.label_es,
-              e.n, e.mean_baseline, e.mean_value, e.mean_pct_change, e.sd_pct_change
-       FROM study_effect e JOIN study_timepoint t USING (timepoint_code) JOIN study_group g USING (group_code)
-       WHERE e.metric_code = ? AND e.group_code <> 'UNASSIGNED' ORDER BY e.group_code, t.sort_order`, metric);
+    findMetric(metric);
+    return effects(metric, query.get('timepoint') ?? undefined);
+  });
+
+  router.get('/api/study/cft70/countermeasures', (_, query) => countermeasureSummary(changeTimepoint(query.get('timepoint'))));
+
+  // ── Minería de datos ──
+  router.get('/api/analytics/reliability', () => ({
+    method: 'Dos analistas (A2 y A3) leyeron las mismas imágenes 3D. ICC(2,1) de acuerdo absoluto, SEM = √MSE, ' +
+      'MDC95 = 1.96·√2·SEM (un analista) o 1.96·SEM (promedio de dos), sesgo y límites de acuerdo de Bland-Altman.',
+    note_es: 'Mide solo el error de lectura entre analistas, no la variación al adquirir otra imagen: es un límite inferior del error real.',
+    sources: ['SRC_SHROUT_FLEISS', 'SRC_WEIR', 'SRC_BLAND_ALTMAN'],
+    metrics: reliability(),
+  }));
+
+  router.get('/api/analytics/correlations', (_, query) => correlations(changeTimepoint(query.get('timepoint'))));
+
+  router.get('/api/analytics/predictors', () => predictors());
+
+  router.get('/api/analytics/phenotypes', (_, query) => {
+    const k = Number(query.get('k') ?? 2);
+    if (![2, 3, 4].includes(k)) throw new HttpError(400, 'k debe ser 2, 3 o 4');
+    return phenotypes(k, changeTimepoint(query.get('timepoint')));
   });
 }

@@ -5,7 +5,7 @@
 *.pem
 *.key
 
-# ── Python / FastAPI ────────────────────────────
+# ── Python (análisis locales) ───────────────────
 __pycache__/
 *.py[cod]
 venv/

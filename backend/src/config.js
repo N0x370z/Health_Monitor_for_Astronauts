@@ -17,5 +17,4 @@ export const config = {
   port: Number(process.env.PORT ?? 8000),
   dbPath: resolve(ROOT, process.env.DB_PATH ?? '../data/health_monitor.sqlite'),
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
-  timeShift: (process.env.TIME_SHIFT ?? 'true') === 'true',
 };

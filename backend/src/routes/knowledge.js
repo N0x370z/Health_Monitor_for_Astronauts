@@ -1,12 +1,19 @@
 import { all, get } from '../db.js';
 import { HttpError } from '../http.js';
-import { allAlerts } from '../services/alerts.js';
+import { subjectAlerts } from '../services/assessment.js';
+import { findTimepoint, regions, subjects } from '../services/dataset.js';
 
 export function register(router) {
+  // Alertas de todos los sujetos en un momento del estudio, de la más grave a la menos grave.
   router.get('/api/alerts', (_, query) => {
+    const tp = findTimepoint(query.get('timepoint')).timepoint_code;
     const level = query.get('level');
-    const mission = query.get('mission');
-    return allAlerts().filter((a) => (!level || a.level === level) && (!mission || a.mission_code === mission));
+    const group = query.get('group')?.toUpperCase();
+    return subjects
+      .filter((s) => !group || s.group_code === group)
+      .flatMap((s) => subjectAlerts(s.subject_code, tp).map((a) => ({ ...a, group_code: s.group_code })))
+      .filter((a) => !level || a.level === level)
+      .sort((a, b) => (b.level === 'critical') - (a.level === 'critical') || b.severity - a.severity);
   });
 
   router.get('/api/problems', () => {
@@ -44,6 +51,7 @@ export function register(router) {
     ranges: all(`SELECT r.*, s.citation FROM medical_reference r JOIN source s ON s.source_id = r.primary_source_id
                  ORDER BY r.metric_code, r.context`),
     change_thresholds: all('SELECT * FROM change_threshold'),
+    regions,
     countermeasures: all('SELECT * FROM countermeasure'),
     sources: all('SELECT * FROM source ORDER BY source_type, source_id'),
   }));
