@@ -25,6 +25,8 @@ Each metric is checked against a clinical range and its % change from the subjec
 
 When the API is available, the values come from `data/health_monitor.sqlite` (same CFT70 files, imported with quality flags; derived metrics computed in the database) and Countermeasures adds the backend's Welch t-test and Hedges' g vs Control.
 
+Terms and abbreviations used on the screens: [`../docs/GLOSSARY.md`](../docs/GLOSSARY.md).
+
 ## Screens
 - **Heart monitor**: echo table by timepoint, interactive heart beating at the measured heart rate, cardiac score by chamber, LV mass vs baseline, findings and actions, % change timeline. ▶ Replay walks through the study.
 - **Countermeasures**: group comparison (Control −13.7 % LV mass at D70 vs Exercise B −2.9 %) and crew table.

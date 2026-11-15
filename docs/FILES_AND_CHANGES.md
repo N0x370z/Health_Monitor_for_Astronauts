@@ -33,6 +33,7 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
     ├── DATA_SOURCES.md                # sources, citations, declarations
     ├── DATA_METHODOLOGY.md            # method, validation, change log
     ├── FILES_AND_CHANGES.md           # this file
+    ├── GLOSSARY.md                    # terms and abbreviations shown in the app
     └── PROMPTS.md                     # useful prompts for the project
 ```
 

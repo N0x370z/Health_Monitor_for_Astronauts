@@ -78,6 +78,7 @@ The database lives in the same repository (`data/`). The backend reads it direct
 - **Monitoring, scoring and data mining:** [`docs/CARDIOVASCULAR_MONITORING.md`](docs/CARDIOVASCULAR_MONITORING.md)
 - **Sources and citations:** [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md)
 - **Method and work record:** [`docs/DATA_METHODOLOGY.md`](docs/DATA_METHODOLOGY.md)
+- **Glossary (terms and abbreviations used in the app):** [`docs/GLOSSARY.md`](docs/GLOSSARY.md)
 
 ### Key findings from the data
 - **Exercise protects the heart.** Every protocol lost less LV mass than Control. Exercise B vs Control: Hedges' g 1.21, p = 0.011. The differences between protocols are not significant.
