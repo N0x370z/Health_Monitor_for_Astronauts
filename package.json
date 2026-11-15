@@ -1,7 +1,7 @@
 {
-  "name": "orbit-care-v1",
+  "name": "orbit-care",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,8 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fontsource/orbitron": "^5.2.5",
-    "@fontsource/plus-jakarta-sans": "^5.2.5",
+    "@fontsource/roboto": "^5.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

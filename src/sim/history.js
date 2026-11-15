@@ -1,6 +1,6 @@
 // Historial diario (14 días) + check-ins guardados localmente (offline).
-const KEY = "orbitcare.checkins.v1";
-export const TODAY = 182;
+const KEY = "orbitcare.checkins.v2";
+export const TODAY = 70; // día del análogo (reposo en cama día 70)
 
 // PRNG determinista para que la demo sea reproducible
 function rng(seed) {

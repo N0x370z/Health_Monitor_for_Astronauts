@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { EVIDENCE } from "../data/evidence.js";
+import { SOURCES } from "../data/echo.js";
 import { STATUS_COLOR } from "../data/config.js";
 
 /* ---------- iconos (SVG inline, sin dependencias) ---------- */
@@ -42,6 +42,38 @@ export function Icon({ name, size = 18, color = "currentColor" }) {
     case "send": return <svg {...p}><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z" /></svg>;
     case "shield": return <svg {...p}><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /></svg>;
     case "book": return <svg {...p}><path d="M4 4h10a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z" /><path d="M8 8h6" /></svg>;
+    case "calendar": return <svg {...p}><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>;
+    case "bell": return <svg {...p}><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></svg>;
+    case "activity": return <svg {...p}><path d="M3 12h4l2.5-6 5 12 2.5-6h4" /></svg>;
+    case "dumbbell": return <svg {...p}><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11" /></svg>;
+    case "bulb": return <svg {...p}><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" /></svg>;
+    case "list": return <svg {...p}><path d="M9 6h11M9 12h11M9 18h11" /><circle cx="4.5" cy="6" r="1" /><circle cx="4.5" cy="12" r="1" /><circle cx="4.5" cy="18" r="1" /></svg>;
+    case "chevronL": return <svg {...p}><path d="M15 6l-6 6 6 6" /></svg>;
+    case "arrowR": return <svg {...p}><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+    case "arrowUp": return <svg {...p}><path d="M12 19V5M6 11l6-6 6 6" /></svg>;
+    case "arrowDown": return <svg {...p}><path d="M12 5v14M6 13l6 6 6-6" /></svg>;
+    case "user": return <svg {...p}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>;
+    case "brandHeart":
+      return (
+        <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden>
+          <path d="M24 42S5 30.5 5 17.5C5 11 9.8 6.5 15.5 6.5c3.9 0 6.8 2.1 8.5 4.8 1.7-2.7 4.6-4.8 8.5-4.8C38.2 6.5 43 11 43 17.5 43 30.5 24 42 24 42z" fill="#3b82f6" />
+          <path d="M24 42S5 30.5 5 17.5C5 11 9.8 6.5 15.5 6.5c3.9 0 6.8 2.1 8.5 4.8" fill="none" stroke="#93c5fd" strokeWidth="1.5" opacity=".6" />
+          <path d="M6 24h10l3-6 5 12 4-9 2.5 3H42" fill="none" stroke="#0f2747" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "heartLine": return <svg {...p}><path d="M12 20s-7.5-4.6-9-9.4C2 7 4.2 4.5 7.2 4.5c2 0 3.6 1.2 4.8 2.8 1.2-1.6 2.8-2.8 4.8-2.8 3 0 5.2 2.5 4.2 6.1C19.5 15.4 12 20 12 20z" /></svg>;
+    case "water": return <svg {...p}><path d="M6 3h12l-1.5 17.5a1.5 1.5 0 0 1-1.5 1.5H9a1.5 1.5 0 0 1-1.5-1.5z" /><path d="M6.6 10h10.8" /></svg>;
+    case "run": return <svg {...p}><circle cx="14.5" cy="4.5" r="2" /><path d="M8 21l3.5-6 3 2.5V22M6 11.5l3.5-3h4l2.5 3.5 3 1M11.5 8.5l-1.5 6" /></svg>;
+    case "stetho": return <svg {...p}><path d="M5 3v6a5 5 0 0 0 10 0V3" /><path d="M10 14v2a5 5 0 0 0 10 0v-2" /><circle cx="20" cy="12" r="2" /></svg>;
+    case "pill": return <svg {...p}><rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-40 12 12)" /><path d="M9.5 9.5l5 5" /></svg>;
+    case "dice": return <svg {...p}><rect x="3.5" y="3.5" width="17" height="17" rx="4" /><circle cx="8.5" cy="8.5" r="1.2" fill={color} /><circle cx="15.5" cy="8.5" r="1.2" fill={color} /><circle cx="12" cy="12" r="1.2" fill={color} /><circle cx="8.5" cy="15.5" r="1.2" fill={color} /><circle cx="15.5" cy="15.5" r="1.2" fill={color} /></svg>;
+    case "database": return <svg {...p}><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8" /><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8" /></svg>;
+    case "play": return <svg {...p} stroke="none"><path d="M7 4.5v15l12.5-7.5z" fill={color} /></svg>;
+    case "pause": return <svg {...p} stroke="none"><rect x="6" y="4.5" width="4" height="15" rx="1" fill={color} /><rect x="14" y="4.5" width="4" height="15" rx="1" fill={color} /></svg>;
+    case "close": return <svg {...p}><path d="M6 6l12 12M18 6L6 18" /></svg>;
+    case "chevron": return <svg {...p}><path d="M9 6l6 6-6 6" /></svg>;
+    case "reset": return <svg {...p}><path d="M4 12a8 8 0 1 0 2.3-5.7" /><path d="M4 4v4.5h4.5" /></svg>;
+    case "tick": return <svg {...p}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
     default: return null;
   }
 }
@@ -87,67 +119,30 @@ export function Sparkline({ data, color = "var(--cyan)", height = 44, min, max, 
   );
 }
 
-/* ---------- gauge radial (diseño 3) — escala logarítmica para radiación ---------- */
-export function RadialGauge({ value, min = 5, max = 2000, status = "ok", label, unit, size = 190 }) {
-  const id = useId();
-  const f = Math.max(0, Math.min(1, (Math.log10(Math.max(value, min)) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))));
-  const r = 80, cx = 100, cy = 100, start = 135, sweep = 270;
-  const pt = (a) => [cx + r * Math.cos((a * Math.PI) / 180), cy + r * Math.sin((a * Math.PI) / 180)];
-  const arc = (a0, a1) => {
-    const [x0, y0] = pt(a0), [x1, y1] = pt(a1);
-    return `M${x0},${y0} A${r},${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1},${y1}`;
-  };
-  const end = start + sweep * f;
-  const col = STATUS_COLOR[status];
+/* ---------- error: la base de datos no tiene este dato ---------- */
+export function NoData({ what, compact = false }) {
   return (
-    <svg viewBox="0 0 200 175" width={size} style={{ maxWidth: "100%" }} role="img" aria-label={`${label} ${value}`}>
-      <defs>
-        <linearGradient id={id} x1="0" x2="1">
-          <stop offset="0" stopColor="var(--teal)" />
-          <stop offset="1" stopColor={status === "ok" ? "var(--cyan)" : col} />
-        </linearGradient>
-      </defs>
-      <path d={arc(start, start + sweep)} stroke="rgba(255,255,255,.08)" strokeWidth="14" fill="none" strokeLinecap="round" />
-      {f > 0.001 && <path d={arc(start, end)} stroke={`url(#${id})`} strokeWidth="14" fill="none" strokeLinecap="round" style={{ filter: `drop-shadow(0 0 6px ${col})`, transition: "all .6s" }} />}
-      <text x="100" y="98" textAnchor="middle" fill="var(--text)" style={{ font: "700 36px var(--font-display)" }}>{value >= 100 ? Math.round(value) : value.toFixed(1)}</text>
-      <text x="100" y="122" textAnchor="middle" fill="var(--text-2)" style={{ font: "600 14px var(--font-body)" }}>{unit}</text>
-    </svg>
+    <div className={`nodata ${compact ? "compact" : ""}`} role="status">
+      <Icon name="alert" size={compact ? 14 : 18} />
+      <div>
+        <b>Error · no data in database</b>
+        {what && <span>{what}</span>}
+      </div>
+    </div>
   );
 }
 
-/* ---------- anillo (SpO2) ---------- */
-export function Ring({ value, min = 85, max = 100, color = "var(--cyan)", size = 64 }) {
-  const f = Math.max(0, Math.min(1, (value - min) / (max - min)));
-  const r = 26, c = 2 * Math.PI * r;
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size}>
-      <circle cx="32" cy="32" r={r} stroke="rgba(255,255,255,.08)" strokeWidth="7" fill="none" />
-      <circle cx="32" cy="32" r={r} stroke={color} strokeWidth="7" fill="none" strokeLinecap="round"
-        strokeDasharray={`${c * f} ${c}`} transform="rotate(-90 32 32)" style={{ transition: "stroke-dasharray .6s", filter: `drop-shadow(0 0 4px ${color})` }} />
-    </svg>
-  );
-}
-
-/* ---------- barra de nivel ---------- */
-export function Level({ value, min, max, status }) {
-  const f = Math.max(0.03, Math.min(1, (value - min) / (max - min)));
-  return <div className="level"><i style={{ width: `${f * 100}%`, background: STATUS_COLOR[status] }} /></div>;
-}
-
-/* ---------- evidencia NLSP ---------- */
+/* ---------- fuente de datos ---------- */
 export function Evidence({ keys = [] }) {
-  const items = keys.map((k) => EVIDENCE[k]).filter(Boolean);
+  const items = keys.map((k) => SOURCES[k]).filter(Boolean);
   if (!items.length) return null;
   return (
     <div className="evidence">
       <Icon name="book" size={14} />
       <div>
-        Based on NASA NLSP:{" "}
+        Data:{" "}
         {items.map((e, i) => (
-          <span key={e.id}>
-            {i > 0 && " · "}
-            <a href={e.url} target="_blank" rel="noreferrer" title={e.title}>{e.id}</a> <span className="muted">({e.mission})</span>
-          </span>
+          <span key={e.id}>{i > 0 && " · "}<b style={{ color: "var(--cyan)", fontWeight: 600 }}>{e.id}</b> <span className="muted">({e.detail})</span></span>
         ))}
       </div>
     </div>

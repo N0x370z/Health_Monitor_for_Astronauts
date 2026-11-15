@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Card, Icon, Sparkline, Evidence } from "../components/ui.jsx";
+import { Card, Icon, Sparkline, NoData } from "../components/ui.jsx";
+import { DATA_ONLY } from "../data/config.js";
+import { MoodFace, Emoji } from "../components/Emoji.jsx";
 import { streak, TODAY } from "../sim/history.js";
 
-const MOODS = ["😞", "😕", "😐", "🙂", "😄"];
+const MOODS = [1, 2, 3, 4, 5];
 const SYMPTOMS = ["Headache", "Nausea", "Back pain", "Congestion", "Sore throat", "Rash", "Vision changes", "Insomnia", "Anxiety", "Irritability"];
 
 function guidance(e) {
@@ -21,7 +23,7 @@ function Slider({ label, hint, value, onChange, min = 1, max = 5, step = 1, fmt 
   return (
     <div className="field">
       <label>{label} <span className="hint">{fmt(value)}</span></label>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(+e.target.value)} aria-label={label} />
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(+e.target.value)} aria-label={label} style={{ "--p": `${((value - min) / (max - min)) * 100}%` }} />
       {hint && <span className="hint">{hint}</span>}
     </div>
   );
@@ -33,17 +35,17 @@ export default function CheckIn({ history, onSubmit }) {
   const [sent, setSent] = useState(!!today?.done);
   const set = (k) => (v) => { setE((x) => ({ ...x, [k]: v })); setSent(false); };
   const toggle = (s) => set("symptoms")(e.symptoms.includes(s) ? e.symptoms.filter((x) => x !== s) : [...e.symptoms, s]);
-  const st = streak(history);
+  const st = streak(history) + (today?.done ? 0 : 0);
   const last7 = history.slice(-7);
 
   return (
     <div className="two">
-      <Card title={`Daily check-in · Day ${TODAY}`} icon={<Icon name="pen" />} right={<span className="chip">🔥 {st} day streak</span>}>
+      <Card title={`Daily check-in · Day ${TODAY}`} icon={<Icon name="pen" />} right={DATA_ONLY ? <span className="chip">Manual entry · not in study database</span> : <span className="chip"><Emoji name="flame" size={14} /> {st} day streak</span>}>
         <div className="field">
           <label>How do you feel today?</label>
           <div className="moods" role="radiogroup" aria-label="Mood">
             {MOODS.map((m, i) => (
-              <button key={m} className={`mood ${e.mood === i + 1 ? "sel" : ""}`} onClick={() => set("mood")(i + 1)} role="radio" aria-checked={e.mood === i + 1} aria-label={`Mood ${i + 1}`}>{m}</button>
+              <button key={m} className={`mood ${e.mood === i + 1 ? "sel" : ""}`} onClick={() => set("mood")(i + 1)} role="radio" aria-checked={e.mood === i + 1} aria-label={`Mood ${i + 1}`}><MoodFace level={m} size={32} /></button>
             ))}
           </div>
         </div>
@@ -64,7 +66,7 @@ export default function CheckIn({ history, onSubmit }) {
         </div>
         <div style={{ display: "flex", gap: 10, marginTop: 18, alignItems: "center" }}>
           <button className="btn primary" onClick={() => { onSubmit(e); setSent(true); }}>{today?.done ? "Update check-in" : "Save check-in"}</button>
-          {sent && <span className="c-ok" style={{ fontWeight: 600 }}>✓ Saved locally (offline)</span>}
+          {sent && <span className="c-ok" style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}><Icon name="tick" size={16} /> Saved locally (offline)</span>}
         </div>
       </Card>
 
@@ -74,7 +76,14 @@ export default function CheckIn({ history, onSubmit }) {
             <div className="insight" key={text}><span className={`dot ${s}`} style={{ marginTop: 6 }} /><span>{text}</span></div>
           ))}
         </Card>
-        <Card title="Last 7 days">
+        {DATA_ONLY ? (
+          <>
+            <Card title="Last 7 days" icon={<Icon name="chart" />}><NoData what="Mood, sleep and stress history are not recorded in the CFT70 echo database." /></Card>
+            <Card title="Badges" icon={<Icon name="list" />}><NoData what="Streaks and badges need a daily log history, which the database does not contain." /></Card>
+          </>
+        ) : (
+          <>
+            <Card title="Last 7 days">
           <div className="muted">Mood</div>
           <Sparkline data={last7.map((d) => d.mood)} min={1} max={5} color="var(--teal)" height={36} />
           <div className="muted" style={{ marginTop: 8 }}>Sleep (h)</div>
@@ -82,15 +91,16 @@ export default function CheckIn({ history, onSubmit }) {
           <div className="muted" style={{ marginTop: 8 }}>Stress</div>
           <Sparkline data={last7.map((d) => d.stress)} min={1} max={5} color="var(--warn)" height={36} />
         </Card>
-        <Card title="Badges">
+            <Card title="Badges">
           <div className="chips">
-            <span className="tog on">🔥 {st}-day streak</span>
-            <span className={`tog ${st >= 7 ? "on" : ""}`}>🛰️ Week in orbit</span>
-            <span className={`tog ${last7.filter((d) => d.sleep >= 7).length >= 3 ? "on" : ""}`}>🌙 Sleep keeper</span>
-            <span className={`tog ${last7.every((d) => (d.exerciseMin || 0) >= 90) ? "on" : ""}`}>💪 Bone guardian</span>
+            <span className="tog on badge"><Emoji name="flame" /> {st}-day streak</span>
+            <span className={`tog badge ${st >= 7 ? "on" : ""}`}><Emoji name="satellite" /> Week in orbit</span>
+            <span className={`tog badge ${last7.filter((d) => d.sleep >= 7).length >= 3 ? "on" : ""}`}><Emoji name="moon" /> Sleep keeper</span>
+            <span className={`tog badge ${last7.every((d) => (d.exerciseMin || 0) >= 90) ? "on" : ""}`}><Emoji name="muscle" /> Bone guardian</span>
           </div>
         </Card>
-        <Evidence keys={["sleepDur", "mood"]} />
+          </>
+        )}
       </div>
     </div>
   );

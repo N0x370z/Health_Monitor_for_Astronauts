@@ -1,129 +1,184 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSimulation } from "./sim/useSimulation.js";
-import { buildAlerts, buildSystems, earthReport } from "./sim/health.js";
-import { loadCheckins, saveCheckins, resetCheckins, TODAY } from "./sim/history.js";
-import { MISSIONS } from "./data/config.js";
+import { loadCheckins, saveCheckins, TODAY } from "./sim/history.js";
+import { ECHO, SUBJECT_IDS, TIMEPOINTS } from "./data/echo.js";
+import { heartState, findings, heartReport, HM, readingText } from "./sim/heart.js";
 import { Icon, Dot } from "./components/ui.jsx";
-import Overview from "./views/Overview.jsx";
+import HeartMonitor from "./views/HeartMonitor.jsx";
+import Countermeasures from "./views/Countermeasures.jsx";
 import CheckIn from "./views/CheckIn.jsx";
-import Eva from "./views/Eva.jsx";
-import Trends from "./views/Trends.jsx";
-import { SystemDrawer, AlertModal, ReportModal } from "./views/Panels.jsx";
+import { SystemDrawer, ReportModal } from "./views/Panels.jsx";
 
 const TABS = [
-  ["overview", "Overview", "body", "Home"],
+  ["heart", "Heart monitor", "heartLine", "Heart"],
+  ["counter", "Countermeasures", "chart", "Crew"],
   ["checkin", "Daily check-in", "pen", "Log"],
-  ["eva", "EVA mode", "suit", "EVA"],
-  ["trends", "Trends", "chart", "Trends"],
 ];
 
-const SCENARIOS = [
-  ["nominal", "Nominal"],
-  ["storm", "☀ Solar storm"],
-  ["co2", "CO₂ buildup"],
-  ["fatigue", "Fatigue week"],
-];
+const DEFAULT_SUBJECT = ECHO.crewIds.includes("6546") ? "6546" : SUBJECT_IDS[0];
+
+function SubjectOptions() {
+  return (
+    <>
+      <optgroup label="Crew (7)">
+        {ECHO.crewIds.map((id) => <option key={id} value={id}>Subject {id}</option>)}
+      </optgroup>
+      <optgroup label="All study subjects">
+        {SUBJECT_IDS.filter((id) => !ECHO.subjects[id].crew).map((id) => <option key={id} value={id}>Subject {id}</option>)}
+      </optgroup>
+    </>
+  );
+}
 
 export default function App() {
-  const [sim, dispatch] = useSimulation();
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("heart");
   const [history, setHistory] = useState(loadCheckins);
-  const [systemKey, setSystemKey] = useState(null);
-  const [alertId, setAlertId] = useState(null);
-  const [dismissed, setDismissed] = useState(() => new Set());
+  const [subjectId, setSubjectId] = useState(DEFAULT_SUBJECT);
+  const [tpKey, setTpKey] = useState("d70");
+  const [playing, setPlaying] = useState(false);
+  const [chamberKey, setChamberKey] = useState(null);
   const [report, setReport] = useState(null);
-  const [demoOpen, setDemoOpen] = useState(false);
+  const [lastRandom, setLastRandom] = useState(null);
+  const [spin, setSpin] = useState(false);
 
+  const subject = ECHO.subjects[subjectId];
+  const hs = useMemo(() => heartState(subject, tpKey), [subject, tpKey]);
+  const fnd = useMemo(() => findings(subject, tpKey), [subject, tpKey]);
   const today = history.find((d) => d.day === TODAY);
-  const { alerts, rad } = useMemo(() => buildAlerts(sim, today), [sim, today]);
-  const systems = useMemo(() => buildSystems(sim, today, history), [sim, today, history]);
-  const openAlert = alerts.find((a) => a.id === alertId);
 
-  // Abrir automáticamente una alerta crítica nueva (una vez por evento)
-  const critId = alerts.find((a) => a.status === "crit" && !dismissed.has(a.id))?.id;
+  // Reproducir la línea de tiempo del estudio
   useEffect(() => {
-    if (critId && !alertId) setAlertId(critId);
-  }, [critId, alertId]);
+    if (!playing) return;
+    const id = setInterval(() => {
+      setTpKey((k) => {
+        const i = TIMEPOINTS.findIndex((t) => t.key === k);
+        if (i >= TIMEPOINTS.length - 1) { setPlaying(false); return k; }
+        return TIMEPOINTS[i + 1].key;
+      });
+    }, 1400);
+    return () => clearInterval(id);
+  }, [playing]);
 
-  const closeAlert = () => {
-    if (alertId) setDismissed((d) => new Set(d).add(alertId));
-    setAlertId(null);
-  };
-
+  // El check-in es entrada manual del astronauta (no está en la base de datos del estudio)
   const submitCheckin = (entry) => {
-    const row = { ...entry, day: TODAY, done: true, hrv: Math.round(sim.vitals.hrv), co2: +sim.env.co2.toFixed(2), dose: +sim.doseMsv.toFixed(1), exerciseMin: today?.exerciseMin ?? 110 };
+    const row = { ...entry, day: TODAY, done: true };
     const next = [...history.filter((d) => d.day !== TODAY), row];
     setHistory(next);
     saveCheckins(next);
   };
 
-  const setScenario = (v) => {
-    dispatch({ type: "scenario", value: v });
-    setDismissed(new Set());
+  const play = () => {
+    if (playing) return setPlaying(false);
+    setTpKey("pre");
+    setPlaying(true);
   };
 
-  const openReport = () => setReport(earthReport(sim, systems, alerts, history));
-  const worstStatus = alerts[0]?.status ?? "ok";
-  const mission = MISSIONS[sim.mission];
+  const chamber = hs.chambers.find((c) => c.key === chamberKey);
+  const drawerData = chamber && {
+    ...chamber,
+    metrics: chamber.readings.map((r) => [HM[r.k].label, readingText(r)]),
+    evidence: ["echoAll", "echo3d"],
+  };
+
+  const openSubject = (id) => { setSubjectId(id); setTpKey("d70"); setTab("heart"); };
+  const openReport = () => setReport(heartReport(subject, tpKey, hs, fnd));
+
+  // Carga aleatoria: un sujeto y un momento del estudio que existan en los CSV
+  const randomSample = () => {
+    const ids = SUBJECT_IDS.filter((id) => ECHO.subjects[id].treatment !== "Unassigned");
+    const id = ids[Math.floor(Math.random() * ids.length)];
+    const tps = TIMEPOINTS.filter((t) => ECHO.subjects[id].tp[t.key]);
+    const t = tps[Math.floor(Math.random() * tps.length)];
+    setPlaying(false);
+    setSubjectId(id);
+    setTpKey(t.key);
+    setTab("heart");
+    setChamberKey(null);
+    setLastRandom(`Subject ${id} · ${t.label} · ${ECHO.subjects[id].treatment}`);
+    setSpin(true);
+    setTimeout(() => setSpin(false), 450);
+  };
+  const tp = TIMEPOINTS.find((t) => t.key === tpKey);
+
+  const HEAD = {
+    heart: [`Hello, Subject ${subject.id}!`, `${tp.long} · ${subject.treatment} — keep your heart strong.`],
+    counter: ["Countermeasures", "What 70 days of bed rest did to 37 hearts — and what protected them."],
+    checkin: ["Daily check-in", "How are you today? It takes less than a minute."],
+  }[tab];
 
   return (
-    <div className="app">
-      <header className="topbar">
+    <div className="shell">
+      {/* ---------- barra lateral (escritorio) ---------- */}
+      <aside className="sidebar navy" aria-label="Main navigation">
         <div className="brand">
-          <Icon name="logo" size={34} />
-          <h1>ORBIT CARE</h1>
+          <Icon name="brandHeart" size={72} />
+          <h1>Orbit Care</h1>
+          <p>Astronaut health manager</p>
         </div>
-        <div className="topbar-right">
-          <select className="chip" value={sim.mission} onChange={(e) => dispatch({ type: "mission", value: e.target.value })} aria-label="Mission environment">
-            {Object.entries(MISSIONS).map(([k, m]) => <option key={k} value={k}>{m.label}</option>)}
-          </select>
-          <span className="chip"><Icon name="signal" size={14} /> Earth: {mission.earthLink}</span>
-          <span className="chip"><Dot status={worstStatus} /> {alerts.length ? `${alerts.length} alert${alerts.length > 1 ? "s" : ""}` : "On mission"}</span>
-          <span className="day">DAY {TODAY}</span>
+        {TABS.map(([k, label, icon]) => (
+          <button key={k} className={`nav-item ${tab === k ? "active" : ""}`} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
+            <Icon name={icon} size={20} />{label}
+            {k === "checkin" && !today?.done && <Dot status="warn" />}
+          </button>
+        ))}
+        <div className="side-foot">
+          <div className="side-user">
+            <div className="avatar">{subject.id.slice(0, 2)}</div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <select value={subjectId} onChange={(e) => openSubject(e.target.value)} aria-label="Crew member">
+                <SubjectOptions />
+              </select>
+              <small>{subject.treatment}{subject.crew ? " · crew" : ""}</small>
+            </div>
+            <Icon name="chevron" size={16} color="#9fb3d6" />
+          </div>
+          <button className="side-link" onClick={openReport}><Icon name="send" size={18} /> Report to flight surgeon</button>
         </div>
+      </aside>
+
+      {/* ---------- barra superior (móvil) ---------- */}
+      <header className="mobile-top navy">
+        <span className="brand-row"><Icon name="brandHeart" size={30} /> Orbit Care</span>
+        <select value={subjectId} onChange={(e) => openSubject(e.target.value)} aria-label="Crew member">
+          <SubjectOptions />
+        </select>
       </header>
 
-      <nav className="tabs" aria-label="Sections">
-        {TABS.map(([k, label, icon, short]) => (
-          <button key={k} className={`tab ${tab === k ? "active" : ""}`} onClick={() => setTab(k)}>
-            <Icon name={icon} size={16} /><span className="lbl">{label}</span><span className="lbl-s">{short}</span>
+      <div className="main">
+        <div className="page-head">
+          <div>
+            <h2>{HEAD[0]}</h2>
+            <p>{HEAD[1]}</p>
+          </div>
+          <div className="head-actions">
+            <button className={`random-btn ${spin ? "spin" : ""}`} onClick={randomSample} title="Load a random subject and timepoint from the CFT70 database">
+              <Icon name="dice" size={22} /><span>Random data</span>
+            </button>
+            <small aria-live="polite">{lastRandom ? `Loaded: ${lastRandom}` : "From the CFT70 echo database"}</small>
+          </div>
+        </div>
+
+        <main>
+          {tab === "heart" && (
+            <HeartMonitor subject={subject} tpKey={tpKey} setTp={(k) => { setPlaying(false); setTpKey(k); }} hs={hs} findings={fnd}
+              onSelectChamber={setChamberKey} selectedChamber={chamberKey} onReport={openReport} playing={playing} onPlay={play} />
+          )}
+          {tab === "counter" && <Countermeasures onOpenSubject={openSubject} />}
+          {tab === "checkin" && <CheckIn history={history} onSubmit={submitCheckin} />}
+        </main>
+      </div>
+
+      {/* ---------- navegación inferior (móvil) ---------- */}
+      <nav className="mobile-nav" aria-label="Sections">
+        {TABS.map(([k, , icon, short]) => (
+          <button key={k} className={tab === k ? "active" : ""} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
+            <Icon name={icon} size={22} />{short}
             {k === "checkin" && !today?.done && <Dot status="warn" />}
-            {k === "eva" && sim.eva.active && <Dot status="watch" />}
           </button>
         ))}
       </nav>
 
-      <main>
-        {tab === "overview" && (
-          <Overview sim={sim} rad={rad} systems={systems} alerts={alerts} today={today}
-            onSelectSystem={setSystemKey} onOpenAlert={(a) => setAlertId(a.id)} onReport={openReport} goCheckin={() => setTab("checkin")} />
-        )}
-        {tab === "checkin" && <CheckIn history={history} onSubmit={submitCheckin} />}
-        {tab === "eva" && <Eva sim={sim} rad={rad} dispatch={dispatch} />}
-        {tab === "trends" && <Trends history={history} />}
-      </main>
-
-      <div className={`demo ${demoOpen ? "" : "closed"}`} role="toolbar" aria-label="Demo scenarios">
-        <button className="toggle" onClick={() => setDemoOpen((o) => !o)} aria-expanded={demoOpen}>
-          {demoOpen ? "✕" : `DEMO ▸ ${SCENARIOS.find(([k]) => k === sim.scenario)[1]}`}
-        </button>
-        {demoOpen && (
-          <>
-            <span>1s = 1min</span>
-            {SCENARIOS.map(([k, label]) => (
-              <button key={k} className={sim.scenario === k ? "on" : ""} onClick={() => setScenario(k)}>{label}</button>
-            ))}
-            <button onClick={() => setHistory(resetCheckins())} title="Reset daily log to sample data">↺ Log</button>
-          </>
-        )}
-      </div>
-
-      <SystemDrawer system={systems.find((s) => s.key === systemKey)} onClose={() => setSystemKey(null)} />
-      {openAlert && (
-        <AlertModal key={openAlert.id} alert={openAlert} onClose={closeAlert} onReport={() => { closeAlert(); openReport(); }}
-          onAction={(type) => dispatch({ type: "shelter", value: type === "shelter" })} />
-      )}
-      {report != null && <ReportModal text={report} delay={mission.earthLink} onClose={() => setReport(null)} />}
+      <SystemDrawer system={drawerData} onClose={() => setChamberKey(null)} />
+      {report != null && <ReportModal text={report} delay="next comm window" onClose={() => setReport(null)} />}
     </div>
   );
 }
