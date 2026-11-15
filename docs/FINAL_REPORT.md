@@ -2,30 +2,32 @@
 
 **Authors:** Ivan Luna Martínez, Cristhian Antonio Aguilar Vazquez, Erik Ulises Flores Contreras, Jorge Mauricio Sandoval Gómez, Jonathan Fructuoso Mercado
 
-NASA Space Apps Challenge 2026 · 15 November 2026
+NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions* · 11/15/26
 
 ## Abstract
 
-We built **Health Monitor for Astronauts**, a web system that detects cardiovascular deconditioning and bone loss from real NASA bed-rest data and turns each measurement into an alert, a countermeasure and evidence. The system integrates three public NASA sources into one SQLite database:
-- the CFT70 echocardiography study (37 subjects, 7 timepoints, 8,753 values);
-- the Life Sciences Data Archive (829 datasets, 237 findings);
-- the MR035G bone densitometry archive (74 subjects, 19,727 DXA measurements).
+**What we built.** Health Monitor for Astronauts is a web system that detects heart and bone deconditioning from real NASA bed-rest data. It turns each measurement into an alert, a recommended countermeasure and its evidence.
 
-A dependency-free Node.js API applies statistics and data mining. A React front end (ORBIT CARE) presents the results per subject, and the whole stack runs on Vercel.
+**How it works.** One SQLite database holds three public NASA sources: CFT70 echocardiography (37 subjects, 8,753 values), the Life Sciences Data Archive (829 datasets) and MR035G bone densitometry (74 subjects, 19,727 scans). A dependency-free Node.js API applies statistics and data mining, and the ORBIT CARE web app shows the results per subject. The whole stack runs on Vercel.
 
-Key results:
-- **Exercise protects the heart.** Without exercise, left-ventricular mass fell 13.7 % in 70 days (p < 0.001); exercise protocols limited the loss to 2.9–7.1 %.
-- **Measurement error matters.** Inter-analyst reliability showed that LV-mass changes below 6.5 % are reading error, so the system does not alert on them.
-- **Early prediction works.** Day-70 echo predicts the heart-rate rise on return to gravity (r = −0.47 to −0.61). Day-7 change anticipates day-70 muscle loss (AUC 0.73, permutation p = 0.009).
-- **Bone is lost where it carries weight.** Total hip −2.8 %, with 63 % of subjects beyond the scanner's least significant change. Non-weight-bearing control sites do not change.
+**What we found.**
+- Without exercise, left-ventricular mass fell 13.7 % in 70 days; exercise limited the loss to 2.9–7.1 %.
+- Changes below 6.5 % are reading error, so they raise no alert.
+- The day-7 change anticipates day-70 muscle loss (AUC 0.73).
+- The total hip lost 2.8 % of bone density, while non-weight-bearing sites did not change.
 
-The contribution is an end-to-end, reproducible pipeline that only reports a change when it exceeds the measured error of the instrument that produced it. It is an educational prototype, not a medical device.
+**Why it matters.** On long missions, astronauts must spot these changes themselves. Our system tells them whether a change is real (larger than the instrument's error) and what to do about it. It is an educational prototype, not a medical device.
 
 ## 1. Introduction
 
 Without gravity, body fluids shift toward the head and plasma volume falls. The heart pumps less blood per beat and loses muscle, and weight-bearing bones lose mineral. On return, astronauts may faint when they stand up and face a higher fracture risk. Head-down tilt bed rest reproduces these changes on Earth and is NASA's main analog for studying them.
 
-**Problem.** Flight surgeons need to know, per crew member and per day, whether a measured change is real and dangerous, and what to do about it. Raw values are hard to read: a 5 % drop in LV mass may be reading error, and a normal cardiac output can hide a falling stroke volume.
+**Challenge.** NASA Space Apps asks for health monitoring software that gathers health indicators and lets astronauts evaluate and act on their own health status. Long missions bring radiation, isolation, altered gravity and a closed environment, with immune changes, bone loss, cardiovascular events and behavioral problems. We focus on the two risks with the richest public NASA data, cardiovascular deconditioning and bone loss, and cover behavioral health with a daily check-in. The system answers the three parts of the challenge:
+- **Gather:** echocardiography, bone densitometry, daily mood, stress, sleep and symptoms, and live vitals (simulated).
+- **Evaluate:** status per metric, a cardiac score by heart region, and bone loss per skeletal region, each against the instrument's error.
+- **Act:** a recommended action and a countermeasure for each alert, backed by NASA evidence.
+
+**Problem.** Astronauts and flight surgeons need to know, per crew member and per day, whether a measured change is real and dangerous, and what to do about it. Raw values are hard to read: a 5 % drop in LV mass may be reading error, and a normal cardiac output can hide a falling stroke volume.
 
 **Objectives.**
 
@@ -40,6 +42,14 @@ Without gravity, body fluids shift toward the head and plasma volume falls. The 
 - A layered system: database, dependency-free Node.js API and React front end, deployed on Vercel (Sections 4 and 6).
 - An error-aware assessment: alerts and bone-loss calls only when a change exceeds the instrument's minimum detectable change (Section 5).
 - Data-mining results on group effects, reliability, early predictors, response phenotypes and skeletal sites (Section 7).
+
+**What is new.**
+
+- **Alerts that know their own error.** Most monitors compare a value with a fixed range. Ours first measures how much each instrument disagrees with itself: the two echo analysts and the repeated DXA scans. It then raises an alert only when a change is larger than that disagreement, which cuts false alarms (Sections 5.2 and 7.2).
+- **Heart and bone in one view.** The heart and bone studies were run and published separately. We put both in one per-subject system, so a flight surgeon can follow both risks together.
+- **From archive to action.** Each number goes from a raw NASA file to a status, an action, a countermeasure and the source behind it, and each step can be traced.
+- **A wearable-style view for astronauts.** The screens borrow the language of smartwatches and fitness bands (daily trends, simple statuses and badges), so an astronaut can read their own heart and bone data without medical training.
+- **Warning before the damage.** The day-7 echo anticipates the day-70 loss, so countermeasures can change while there is still time to act (Section 7.3).
 
 Report outline:
 - Section 2: background and related work.
@@ -58,6 +68,10 @@ Bed rest and spaceflight cause the same two problems this system tracks: cardiac
 - **Measurement error.** A change is only real if it exceeds the instrument's error.
   - Readers: ICC and the standard error of measurement give the minimum detectable change (Shrout and Fleiss, 1979; Weir, 2005; Bland and Altman, 1986).
   - DXA: precision comes from repeated scans (Glüer et al., 1995), and the least significant change is 2.77 × precision (Baim et al., 2005).
+
+**Design inspiration.**
+- **Radiation monitoring.** A NASA page on space radiation showed how exposure is tracked against limits and acted on. We applied the same idea (measure, compare with a limit, act) to the heart and bones.
+- **Consumer wearables.** Apps for Garmin-style watches and fitness bands inspired the charts, the daily check-in and the badges. We moved that experience from everyday users to astronauts and to cardiovascular and bone risks.
 
 **Gap addressed.** Published studies report group averages. Few tools apply these error thresholds per subject and turn them into actions. None we found combine cardiac and bone data from the public NASA archives in one open, reproducible system.
 
@@ -287,7 +301,7 @@ Future work:
 
 ## References
 
-All DOIs were checked in Crossref (14–15 November 2026).
+All DOIs were checked in Crossref (11/14/26–11/15/26).
 
 1. Baim S, Wilson CR, Lewiecki EM, Luckey MM, et al. Precision assessment and radiation safety for dual-energy X-ray absorptiometry: position paper of the ISCD. *J Clin Densitom.* 2005;8(4):371–378. [doi:10.1385/JCD:8:4:371](https://doi.org/10.1385/JCD:8:4:371)
 2. Bland JM, Altman DG. Statistical methods for assessing agreement between two methods of clinical measurement. *Lancet.* 1986;327(8476):307–310. [doi:10.1016/S0140-6736(86)90837-8](https://doi.org/10.1016/S0140-6736(86)90837-8)

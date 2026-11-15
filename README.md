@@ -1,6 +1,8 @@
 # Health Monitor for Astronauts
 
 > Cardiovascular and bone health monitoring for astronauts on space missions, built on real NASA data and a shared database.
+>
+> NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions*. Inspired by NASA's radiation monitoring (measure, compare with a limit, act) and by wearable apps for watches and fitness bands, refocused on astronauts and on cardiovascular and bone risks.
 
 Away from Earth's gravity the heart changes. Fluids shift to the head, plasma volume falls, the heart pumps less blood per beat and loses muscle mass. On returning to gravity, astronauts may faint when they stand up. NASA's 70-day bed rest study (CFT70) shows it clearly: without exercise, left ventricular mass fell **13.7 %** and stroke volume **14.3 %**, and heart rate rose **51 %** on getting up. With exercise countermeasures, those losses were much smaller. Bones that carry weight also lose density: in NASA bed rest DXA scans the total hip lost **2.8 %**, while the forearm did not change.
 
@@ -186,6 +188,7 @@ Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGE
 ## Changelog
 
 ### v5: bone density
+- **Space Apps compliance:** the page icon is now an original heart-and-orbit design (`frontend/public/favicon.svg`); the earlier NASA-logo icon was removed because NASA branding is not allowed. The final report names the challenge and has a shorter abstract (under 200 words), a "What is new" section and the design inspiration.
 - **Final report** in computer-science paper format: [`docs/FINAL_REPORT.md`](docs/FINAL_REPORT.md), with the architecture diagram and the bone-loss chart in `docs/report/`.
 - **Early warning (Erik, PR #2):** `/api/analytics/early-warning` validates the day-7 signal out of sample (`services/mining.js`: AUC with bootstrap CI, permutation test, leave-one-subject-out ridge logistic regression, Brier score, CUSUM, shrinkage Mahalanobis distance); a CUSUM trend alarm adds a `trend` recommendation (warning level).
 - **Frontend:** new Bone density screen (which bones lose density, what to watch, subject timeline), a guided tour per screen in the app's palette, and the code organized in layers (`app/`, `ui/`, `domain/`, `data/`). Merged ORBIT CARE v2.2 (check-in with week and badges, health-tip arrows, gap filling marked in italics) and Erik's early-warning validation (`/api/analytics/early-warning`). Fixed: the echo table failed when the data came from the API, and the heart-rate chart in Countermeasures asked the API for an unknown metric.
