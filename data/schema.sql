@@ -1,12 +1,16 @@
 -- Health Monitor for Astronauts — esquema de la base de datos cardiovascular (3FN)
 -- Archivo: data/health_monitor.sqlite (SQLite). SQL portable a PostgreSQL.
 --
+-- Solo datos reales y conocimiento con fuente (v4: se eliminó la tripulación sintética).
 -- Grupos de tablas:
 --   1. Conocimiento: problemas cardiovasculares del vuelo espacial, métricas, rangos, reglas de alerta,
 --      contramedidas y fuentes.
---   2. Estudio real NASA CFT70 / BRSMCF: ecocardiografía de 37 sujetos en 70 días de reposo en cama.
---   3. Monitoreo de tripulación (sintético, anónimo): signos vitales 24 h, historial diario y ecocardiogramas.
+--   2. Estudio real NASA CFT70 / BRSMCF: ecocardiografía de 37 sujetos en 70 días de reposo en cama,
+--      más métricas derivadas con fórmulas clínicas (method = 'DERIVED').
+--   3. Puntaje cardiaco: regiones del corazón y métricas que las componen.
 --   4. Evidencia NASA LSDA: catálogo público relacionado con la función cardiovascular.
+-- Los resúmenes estadísticos (efectos por grupo, IC 95 %, pruebas, correlaciones, fenotipos) los calcula
+-- el backend al arrancar; no se guardan en la base.
 
 -- ════════════════════ 1. Conocimiento ════════════════════════════════════
 CREATE TABLE source (
@@ -132,7 +136,8 @@ CREATE TABLE study_timepoint (
     day_offset      REAL NOT NULL,               -- días desde el inicio del reposo en cama
     sort_order      INTEGER NOT NULL,
     label_es        TEXT NOT NULL,
-    raw_labels      TEXT NOT NULL                -- etiquetas originales en los CSV
+    raw_labels      TEXT NOT NULL,               -- etiquetas originales en los CSV
+    short_label     TEXT                         -- Pre, D7, D21, D30, D70, R+0, R+3 (las usa el frontend)
 );
 
 CREATE TABLE study_echo_measurement (            -- formato largo: una fila por sujeto, momento, métrica y analista
@@ -142,89 +147,30 @@ CREATE TABLE study_echo_measurement (            -- formato largo: una fila por 
     metric_code      TEXT NOT NULL REFERENCES metric(metric_code),
     value            REAL,                       -- NULL = no disponible (ver quality_flag)
     method           TEXT NOT NULL CHECK (method IN ('2D_DOPPLER_TDI', '3D', 'DERIVED')),
-    analyzer_code    TEXT,                       -- analista anónimo del eco 3D (A1, A2, A3)
+    analyzer_code    TEXT,                       -- analista anónimo del eco 3D (A1, A2, A3); los derivados del 3D lo conservan
     quality_flag     TEXT NOT NULL CHECK (quality_flag IN ('ok', 'missing', 'bad_image', 'not_analyzable', 'dismissed', 'zero_as_missing')),
-    comment          TEXT,
-    source_file      TEXT NOT NULL
+    comment          TEXT,                       -- en los derivados: la fórmula usada
+    source_file      TEXT NOT NULL               -- CSV de origen, o 'derived'
 );
 CREATE INDEX ix_study_echo ON study_echo_measurement (metric_code, timepoint_code);
 CREATE INDEX ix_study_echo_subject ON study_echo_measurement (subject_code);
 
-CREATE TABLE study_effect (                      -- resumen: cambio medio vs BR-2 por grupo y momento
-    metric_code        TEXT NOT NULL REFERENCES metric(metric_code),
-    group_code         TEXT NOT NULL REFERENCES study_group(group_code),
-    timepoint_code     TEXT NOT NULL REFERENCES study_timepoint(timepoint_code),
-    n                  INTEGER NOT NULL,
-    mean_baseline      REAL,
-    mean_value         REAL,
-    mean_pct_change    REAL,
-    sd_pct_change      REAL,
-    PRIMARY KEY (metric_code, group_code, timepoint_code)
+-- ════════════════════ 3. Puntaje cardiaco ════════════════════════════════
+CREATE TABLE cardiac_region (                    -- regiones del corazón que muestra el frontend
+    region_code     TEXT PRIMARY KEY,           -- left_ventricle, aortic_outflow, rate_timing, mitral_valve, right_ventricle
+    name_es         TEXT NOT NULL,
+    name_en         TEXT NOT NULL,
+    description_es  TEXT NOT NULL,
+    weight          REAL NOT NULL,              -- peso en el puntaje global (suman 1)
+    sort_order      INTEGER NOT NULL
 );
 
--- ════════════════════ 3. Monitoreo de tripulación (sintético) ═════════════
-CREATE TABLE mission (
-    mission_code            TEXT PRIMARY KEY,
-    name_es                 TEXT NOT NULL,
-    environment_context     TEXT NOT NULL,
-    gravity_g               REAL NOT NULL,
-    duration_days           INTEGER NOT NULL,
-    current_mission_day     INTEGER NOT NULL,
-    countermeasure_hardware TEXT NOT NULL,       -- equipo de ejercicio disponible
-    description_es          TEXT
+CREATE TABLE region_metric (
+    region_code     TEXT NOT NULL REFERENCES cardiac_region(region_code),
+    metric_code     TEXT NOT NULL REFERENCES metric(metric_code),
+    weight          REAL NOT NULL,              -- peso dentro de la región; 0 = solo informativa
+    PRIMARY KEY (region_code, metric_code)
 );
-
-CREATE TABLE crew_member (                       -- sin nombre, edad ni datos personales
-    crew_code              TEXT PRIMARY KEY,
-    mission_code           TEXT NOT NULL REFERENCES mission(mission_code),
-    role                   TEXT NOT NULL,
-    baseline_hr            REAL NOT NULL,
-    baseline_sbp           REAL NOT NULL,
-    baseline_dbp           REAL NOT NULL,
-    baseline_lv_mass       REAL NOT NULL,        -- g (eco 3D pre-vuelo)
-    baseline_stroke_volume REAL NOT NULL,        -- mL
-    prior_career_dose_msv  REAL NOT NULL
-);
-
-CREATE TABLE event (                             -- anomalías inyectadas (verdad de referencia)
-    event_id            TEXT PRIMARY KEY,
-    mission_code        TEXT NOT NULL REFERENCES mission(mission_code),
-    crew_code           TEXT REFERENCES crew_member(crew_code),     -- NULL = módulo / toda la tripulación
-    problem_code        TEXT NOT NULL REFERENCES cv_problem(problem_code),
-    scale               TEXT NOT NULL CHECK (scale IN ('24h', 'daily')),
-    start_ts            TEXT,
-    end_ts              TEXT,
-    description_es      TEXT NOT NULL
-);
-
-CREATE TABLE measurement (                       -- últimas 24 h, cada 5 min
-    measurement_id       INTEGER PRIMARY KEY,
-    ts                   TEXT NOT NULL,          -- ISO 8601 UTC
-    mission_code         TEXT NOT NULL REFERENCES mission(mission_code),
-    crew_code            TEXT REFERENCES crew_member(crew_code),   -- NULL = sensor del módulo
-    metric_code          TEXT NOT NULL REFERENCES metric(metric_code),
-    value                REAL NOT NULL,
-    activity             TEXT NOT NULL CHECK (activity IN ('sleep', 'work', 'exercise')),
-    status               TEXT NOT NULL CHECK (status IN ('normal', 'warning', 'critical')),
-    event_id             TEXT REFERENCES event(event_id)
-);
-CREATE INDEX ix_measurement_crew_metric_ts ON measurement (crew_code, metric_code, ts);
-CREATE INDEX ix_measurement_mission_metric_ts ON measurement (mission_code, metric_code, ts);
-CREATE INDEX ix_measurement_status ON measurement (status);
-
-CREATE TABLE daily_measurement (                 -- historial: medias diarias, pruebas ortostáticas, ecos, dosis
-    daily_id             INTEGER PRIMARY KEY,
-    date                 TEXT NOT NULL,
-    mission_day          INTEGER NOT NULL,
-    mission_code         TEXT NOT NULL REFERENCES mission(mission_code),
-    crew_code            TEXT NOT NULL REFERENCES crew_member(crew_code),
-    metric_code          TEXT NOT NULL REFERENCES metric(metric_code),
-    value                REAL NOT NULL,
-    pct_change_from_baseline REAL,               -- solo métricas con change_threshold
-    status               TEXT NOT NULL CHECK (status IN ('normal', 'warning', 'critical')),
-    event_id             TEXT REFERENCES event(event_id)
-);
-CREATE INDEX ix_daily_crew_metric ON daily_measurement (crew_code, metric_code, mission_day);
 
 -- ════════════════════ 4. Evidencia NASA LSDA (pública) ════════════════════
 CREATE TABLE nasa_experiment (
@@ -285,10 +231,3 @@ SELECT e.problem_code, p.name_es AS problem_name, e.metric_code, e.finding_text,
 FROM nasa_evidence_finding e
 JOIN nasa_experiment x ON x.experiment_key = e.experiment_key
 JOIN cv_problem p ON p.problem_code = e.problem_code;
-
-CREATE VIEW v_latest_vitals AS                   -- último valor de cada signo vital por tripulante
-SELECT m.crew_code, m.metric_code, m.value, m.status, m.ts
-FROM measurement m
-JOIN (SELECT crew_code, metric_code, MAX(ts) AS ts FROM measurement WHERE crew_code IS NOT NULL
-      GROUP BY crew_code, metric_code) last
-  ON last.crew_code = m.crew_code AND last.metric_code = m.metric_code AND last.ts = m.ts;

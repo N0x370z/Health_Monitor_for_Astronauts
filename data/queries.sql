@@ -1,4 +1,5 @@
 -- Consultas de ejemplo sobre data/health_monitor.sqlite (SQL estándar, válido en SQLite y PostgreSQL)
+-- Las estadísticas avanzadas (IC 95 %, pruebas, correlaciones, fenotipos) las calcula el backend: /api/analytics/*
 
 -- 1. PROBLEMAS: problemas cardiovasculares del vuelo espacial con sus contramedidas
 SELECT p.severity_rank, p.name_es AS problema, pc.role, c.name_es AS contramedida
@@ -7,49 +8,62 @@ JOIN problem_countermeasure pc ON pc.problem_code = p.problem_code
 JOIN countermeasure c ON c.countermeasure_code = pc.countermeasure_code
 ORDER BY p.severity_rank, pc.role;
 
--- 2. ESTUDIO CFT70: cambio medio vs antes del reposo, Control vs ejercicio, al día 70
-SELECT e.metric_code, e.group_code, e.n, ROUND(e.mean_pct_change, 1) AS pct_change
-FROM study_effect e
-WHERE e.timepoint_code = 'BR70'
-  AND e.metric_code IN ('lv_mass', 'stroke_volume', 'lvot_vti', 'hr_tdi_left', 'e_a_ratio', 'lvef')
-  AND e.group_code <> 'UNASSIGNED'
-ORDER BY e.metric_code, e.group_code;
+-- 2. ESTUDIO CFT70: cambio medio (%) vs antes del reposo, por grupo, al día 70
+--    (primero se promedian los analistas del eco 3D de cada sujeto, luego se promedia el % de cada sujeto)
+WITH v AS (
+  SELECT subject_code, timepoint_code, metric_code, AVG(value) AS value
+  FROM study_echo_measurement WHERE value IS NOT NULL
+  GROUP BY subject_code, timepoint_code, metric_code
+)
+SELECT s.group_code, b.metric_code, COUNT(*) AS n,
+       ROUND(AVG((d.value - b.value) * 100.0 / b.value), 1) AS pct_change
+FROM v b
+JOIN v d ON d.subject_code = b.subject_code AND d.metric_code = b.metric_code AND d.timepoint_code = 'BR70'
+JOIN study_subject s ON s.subject_code = b.subject_code
+WHERE b.timepoint_code = 'BR-2' AND b.value <> 0 AND s.group_code <> 'UNASSIGNED'
+  AND b.metric_code IN ('lv_mass', 'stroke_volume', 'lvot_vti', 'hr_tdi_left', 'cardiac_output', 'e_a_ratio')
+GROUP BY s.group_code, b.metric_code
+ORDER BY b.metric_code, s.group_code;
 
--- 3. ESTUDIO CFT70: trayectoria de la masa del VI por grupo (todos los momentos)
-SELECT t.sort_order, e.timepoint_code, e.group_code, ROUND(e.mean_pct_change, 1) AS pct_change
-FROM study_effect e
+-- 3. SUJETO: tabla de ecocardiografía de un sujeto (todas las sesiones, eco 3D promediado)
+SELECT t.short_label, e.metric_code, ROUND(AVG(e.value), 2) AS value
+FROM study_echo_measurement e
 JOIN study_timepoint t ON t.timepoint_code = e.timepoint_code
-WHERE e.metric_code = 'lv_mass' AND e.group_code <> 'UNASSIGNED'
-ORDER BY e.group_code, t.sort_order;
+WHERE e.subject_code = 'S6546' AND e.value IS NOT NULL
+  AND e.metric_code IN ('lv_mass', 'lvedv', 'stroke_volume', 'lvef', 'cardiac_output', 'hr_tdi_left', 'lvot_vti', 'tei_index')
+GROUP BY t.sort_order, t.short_label, e.metric_code
+ORDER BY e.metric_code, t.sort_order;
 
--- 4. MONITOREO: últimos signos vitales de cada tripulante
-SELECT crew_code, metric_code, value, status, ts
-FROM v_latest_vitals
-ORDER BY crew_code, metric_code;
+-- 4. MÉTRICAS DERIVADAS: fórmula usada y cuántos valores hay de cada una
+SELECT metric_code, comment AS formula, COUNT(*) AS n, ROUND(MIN(value), 2) AS min, ROUND(MAX(value), 2) AS max
+FROM study_echo_measurement
+WHERE source_file = 'derived'
+GROUP BY metric_code, comment;
 
--- 5. MONITOREO: palpitaciones (FC fuera de rango en reposo) en las últimas 24 h
-SELECT crew_code, MIN(ts) AS first_ts, MAX(ts) AS last_ts, COUNT(*) AS points, MAX(value) AS max_bpm
-FROM measurement
-WHERE metric_code = 'heart_rate' AND activity <> 'exercise' AND status <> 'normal'
-GROUP BY crew_code
-ORDER BY max_bpm DESC;
+-- 5. CONFIABILIDAD: lecturas del mismo eco 3D por los analistas A2 y A3 (base del cambio mínimo detectable)
+SELECT a.metric_code, COUNT(*) AS pares,
+       ROUND(AVG(a.value - b.value), 2) AS sesgo_medio,
+       ROUND(AVG(ABS(a.value - b.value)), 2) AS diferencia_absoluta_media
+FROM study_echo_measurement a
+JOIN study_echo_measurement b ON b.subject_code = a.subject_code AND b.timepoint_code = a.timepoint_code
+ AND b.metric_code = a.metric_code AND b.analyzer_code = 'A3'
+WHERE a.analyzer_code = 'A2' AND a.value IS NOT NULL AND b.value IS NOT NULL
+  AND a.metric_code IN ('lv_mass', 'lvedv', 'lvesv', 'stroke_volume')
+GROUP BY a.metric_code;
 
--- 6. MONITOREO: último ecocardiograma de cada tripulante comparado con su línea base
-SELECT d.crew_code, d.metric_code, d.value, d.pct_change_from_baseline, d.status
-FROM daily_measurement d
-JOIN (SELECT crew_code, metric_code, MAX(mission_day) AS last_day FROM daily_measurement
-      WHERE metric_code IN ('lv_mass', 'stroke_volume', 'lvot_vti', 'e_a_ratio') GROUP BY 1, 2) l
-  ON l.crew_code = d.crew_code AND l.metric_code = d.metric_code AND l.last_day = d.mission_day
-ORDER BY d.crew_code, d.metric_code;
-
--- 7. PREVENCIÓN: reglas que se activan con el estado actual y la acción recomendada
-SELECT d.crew_code, r.level, r.condition_es, r.action_es, c.name_es AS contramedida
-FROM daily_measurement d
-JOIN (SELECT crew_code, metric_code, MAX(mission_day) AS last_day FROM daily_measurement GROUP BY 1, 2) l
-  ON l.crew_code = d.crew_code AND l.metric_code = d.metric_code AND l.last_day = d.mission_day
-JOIN alert_rule r ON r.metric_code = d.metric_code AND r.level = d.status
+-- 6. PREVENCIÓN: reglas de alerta con su acción recomendada y la contramedida
+SELECT r.metric_code, r.level, r.condition_es, r.action_es, c.name_es AS contramedida
+FROM alert_rule r
 LEFT JOIN countermeasure c ON c.countermeasure_code = r.countermeasure_code
-ORDER BY CASE r.level WHEN 'critical' THEN 0 ELSE 1 END, d.crew_code;
+WHERE r.metric_code IN (SELECT metric_code FROM region_metric)
+ORDER BY r.metric_code, CASE r.level WHEN 'critical' THEN 0 ELSE 1 END;
+
+-- 7. PUNTAJE: regiones del corazón y métricas que las componen
+SELECT cr.sort_order, cr.name_es AS region, cr.weight AS peso_region, m.name_es AS metrica, rm.weight AS peso_metrica
+FROM cardiac_region cr
+JOIN region_metric rm ON rm.region_code = cr.region_code
+JOIN metric m ON m.metric_code = rm.metric_code
+ORDER BY cr.sort_order, rm.weight DESC;
 
 -- 8. EVIDENCIA: hallazgos NASA que respaldan un problema
 SELECT experiment_id, experiment_title, finding_text
