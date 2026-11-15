@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { config } from './config.js';
 import { HttpError, Router, sendJson } from './http.js';
+import { register as boneRoutes } from './routes/bone.js';
 import { register as knowledgeRoutes } from './routes/knowledge.js';
 import { register as studyRoutes } from './routes/study.js';
 import { register as subjectRoutes } from './routes/subjects.js';
@@ -17,6 +18,7 @@ router.get('/api/health', () => ({
 subjectRoutes(router);
 studyRoutes(router);
 knowledgeRoutes(router);
+boneRoutes(router);
 
 export function handle(req, res) {
   const url = new URL(req.url, 'http://localhost');

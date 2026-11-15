@@ -193,3 +193,28 @@ test('echo-data: todos los valores del eco para el frontend', async () => {
   near(s.values.D70.lvedv, 92.5, 0.1);
   near(s.values.D70.cardiac_output, 4.33, 0.01);
 });
+
+test('hueso: regiones clave con pérdida y controles sin cambio', async () => {
+  const { status, body } = await getJson('/api/bone');
+  assert.equal(status, 200);
+  assert.equal(body.regions.length, 11);
+  assert.deepEqual(body.campaigns.map((c) => c.subjects).reduce((a, b) => a + b, 0), 74);
+  const r = Object.fromEntries(body.regions.map((x) => [x.region_code, x]));
+  near(r.TOTAL_HIP.mean_pct_change, -2.76, 0.05);
+  assert.ok(r.TOTAL_HIP.p_vs_baseline < 0.001 && r.TOTAL_HIP.lsc_pct > 2);
+  assert.ok(r.FOREARM_13.p_vs_baseline > 0.05 && r.ARM.p_vs_baseline > 0.05);
+  // las 4 regiones más afectadas son de carga (cadera y pelvis)
+  assert.ok(body.ranking.slice(0, 4).every((x) => x.role === 'key'));
+});
+
+test('hueso: sujeto con línea de tiempo y estado frente al LSC', async () => {
+  const list = (await getJson('/api/bone/subjects?campaign=UTMB_C3')).body;
+  assert.equal(list.length, 32);
+  const { status, body } = await getJson('/api/bone/subjects/C3-224');
+  assert.equal(status, 200);
+  const hip = body.regions.find((x) => x.region_code === 'TOTAL_HIP');
+  assert.equal(hip.bed_rest_change.status, 'loss');
+  assert.equal(hip.visits[0].visit_code, 'PRE');
+  assert.equal((await getJson('/api/bone/subjects/NOPE')).status, 404);
+  assert.equal((await getJson('/api/bone/subjects?campaign=XX')).status, 400);
+});
