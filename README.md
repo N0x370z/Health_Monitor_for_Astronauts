@@ -2,7 +2,7 @@
 
 > Cardiovascular and bone health monitoring for astronauts on space missions, built on real NASA data and a shared database.
 >
-> NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions*. Inspired by NASA's radiation monitoring (measure, compare with a limit, act) and by wearable apps for watches and fitness bands, refocused on astronauts and on cardiovascular and bone risks.
+> NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions*. Inspired by SpaceGenes+ (Space Apps 2025), a dashboard of how radiation and microgravity affect the body, and by wearable apps for watches and fitness bands, refocused on astronauts and on cardiovascular and bone risks.
 
 Away from Earth's gravity the heart changes. Fluids shift to the head, plasma volume falls, the heart pumps less blood per beat and loses muscle mass. On returning to gravity, astronauts may faint when they stand up. NASA's 70-day bed rest study (CFT70) shows it clearly: without exercise, left ventricular mass fell **13.7 %** and stroke volume **14.3 %**, and heart rate rose **51 %** on getting up. With exercise countermeasures, those losses were much smaller. Bones that carry weight also lose density: in NASA bed rest DXA scans the total hip lost **2.8 %**, while the forearm did not change.
 
