@@ -1,4 +1,4 @@
-import { bestProtocol, groupEffect, mdcPct, phenotypes } from './analytics.js';
+import { bestProtocol, groupEffect, mdcPct, phenotypes, trajectoryAlarm } from './analytics.js';
 import {
   BASELINE, STATUS_LABEL, changeThresholds, findTimepoint, groupByCode, metricInfo, metrics, pctChange, references, regions,
   rules, value, worst,
@@ -242,6 +242,20 @@ export function recommendations(subject, tp, alerts) {
   if (!plan.current && plan.recommended) {
     recs.push({ kind: 'countermeasure', level: 'info', title_es: `Iniciar ${plan.recommended.name_es}`, detail_es: 'El sujeto no tiene contramedida de ejercicio asignada.', action_es: 'Asignar el protocolo de ejercicio aeróbico y de resistencia con mejor resultado en CFT70.', countermeasure_code: plan.recommended.countermeasure_code, metric_code: 'lv_mass' });
   }
+
+  const traj = trajectoryAlarm(subject.subject_code ?? subject, 'lv_mass', tp);
+  if (traj?.alarm_tp) {
+    recs.push({
+      kind: 'trend',
+      level: 'warning',
+      title_es: `Tendencia sostenida a la baja en ${traj.metric.name_es} (desde ${traj.alarm_tp})`,
+      detail_es: `El cambio acumulado supera lo esperable por error de medición (σ = ${traj.sigma_pct} %).`,
+      action_es: 'Confirmar con una segunda medición y verificar que la contramedida se cumple.',
+      countermeasure_code: 'MEDICAL_CONSULT',
+      metric_code: traj.metric.metric_code,
+    });
+  }
+
   return recs;
 }
 

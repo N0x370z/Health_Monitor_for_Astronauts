@@ -2,6 +2,7 @@ import {
   BASELINE, COMPARISON_GROUPS, analyzerPairs, findTimepoint, groupByCode, metricInfo, metricsWithReads,
   pctChange, publicTimepoint, subjects, subjectsInGroup, timepoints, value,
 } from './dataset.js';
+import { cusumLower, evaluateEarlySignal } from './mining.js';
 import {
   agreement, benjaminiHochberg, formatP, hedgesG, kmeans, mean, oneSample, pearson, round, roundP, spearman, standardize, welch,
 } from './stats.js';
@@ -302,4 +303,58 @@ export function phenotypes(k = 2, tpCode = 'BR70') {
       assignments,
     };
   });
+}
+
+// ── 7. Señal temprana y tendencia (validación fuera de muestra) ──────────
+/** Error típico de medición (% de la media) del eco 3D; sirve de σ para el CUSUM. */
+const semPct = (metric) => reliability().find((r) => r.metric_code === metric)?.sem_pct ?? null;
+
+/**
+ * ¿La pérdida temprana anticipa la pérdida final? Validado dejando un sujeto fuera.
+ * Evento = pérdida final ≥ cambio mínimo detectable (MDC95) de la métrica.
+ */
+export function earlyWarningValidation(metric = 'lv_mass', earlyTp = 'BR7', finalTp = 'BR70') {
+  return memo(`ew:${metric}:${earlyTp}:${finalTp}`, () => {
+    const mdc = mdcPct(metric);
+    if (mdc == null) return null;
+    const rows = studyIds().map((s) => ({
+      id: s,
+      exercise: groupByCode.get(subjects.find((x) => x.subject_code === s).group_code)?.is_countermeasure ? 1 : 0,
+      x: pctChange(s, earlyTp, metric),
+      y: pctChange(s, finalTp, metric),
+    }));
+    return {
+      metric: metricInfo(metric),
+      early_tp: earlyTp,
+      final_tp: finalTp,
+      ...evaluateEarlySignal(rows, mdc),
+      method: 'AUC con IC 95 % por bootstrap y p de permutación; regresión logística ridge evaluada dejando un sujeto fuera (Brier skill > 0 = mejor que predecir la prevalencia).',
+    };
+  });
+}
+
+const TREND_TPS = ['BR7', 'BR21', 'BR30', 'BR70'];
+
+/**
+ * CUSUM inferior sobre el % de cambio, medido en unidades del error de medición.
+ * upToTp: solo usa datos hasta ese momento (un aviso temprano no puede ver el futuro).
+ */
+export function trajectoryAlarm(subjectCode, metric = 'lv_mass', upToTp = null) {
+  const sigma = semPct(metric);
+  if (!sigma) return null;
+  const limit = upToTp ? findTimepoint(upToTp).sort_order : Infinity;
+  // Ignora los momentos que no existan en tu tabla study_timepoint (por ejemplo BR21 o BR30).
+  const tps = TREND_TPS.flatMap((c) => { try { return [findTimepoint(c)]; } catch { return []; } })
+    .filter((t) => t.sort_order <= limit);
+  if (!tps.length) return null;
+  const pcts = tps.map((t) => pctChange(subjectCode, t.timepoint_code, metric));
+  if (pcts.every((p) => p == null)) return null;
+  const { path, alarm } = cusumLower(pcts.map((p) => (p == null ? null : p / sigma)));
+  return {
+    metric: metricInfo(metric),
+    sigma_pct: r2(sigma),
+    points: tps.map((t, i) => ({ short_label: t.short_label, pct_change: pcts[i] == null ? null : r2(pcts[i]), cusum: path[i] == null ? null : r2(path[i]) })),
+    alarm_tp: alarm == null ? null : tps[alarm].short_label,
+    method: 'CUSUM inferior (k=0.5, h=4) sobre el % de cambio en unidades de error de medición (SEM).',
+  };
 }

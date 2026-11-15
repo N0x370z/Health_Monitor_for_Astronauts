@@ -1,6 +1,6 @@
 import { all } from '../db.js';
 import {
-  correlations, countermeasureSummary, effects, phenotypes, predictors, reliability,
+  correlations, countermeasureSummary, earlyWarningValidation, effects, phenotypes, predictors, reliability,
 } from '../services/analytics.js';
 import { BASELINE, echoData, findMetric, findTimepoint, groups, metricInfo, study, subjects, timepoints } from '../services/dataset.js';
 import { HttpError } from '../http.js';
@@ -47,6 +47,15 @@ export function register(router) {
   router.get('/api/analytics/correlations', (_, query) => correlations(changeTimepoint(query.get('timepoint'))));
 
   router.get('/api/analytics/predictors', () => predictors());
+
+  // Validación fuera de muestra del aviso temprano (AUC, permutación, regresión logística dejando un sujeto fuera).
+  router.get('/api/analytics/early-warning', (_, query) => {
+    const metric = query.get('metric') ?? 'lv_mass';
+    findMetric(metric);
+    const result = earlyWarningValidation(metric);
+    if (!result) throw new HttpError(400, `${metric} no tiene lecturas de dos analistas: usa una métrica del eco 3D, como lv_mass`);
+    return result;
+  });
 
   router.get('/api/analytics/phenotypes', (_, query) => {
     const k = Number(query.get('k') ?? 2);
