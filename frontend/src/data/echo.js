@@ -10,6 +10,7 @@ export const SOURCES = {
   echoAll: { id: "BRSMCF CFT70 Echo All Data", detail: "37 subjects · 2D/Doppler/TDI echo · 5 timepoints" },
   echo3d: { id: "BRSMCF CFT70 3D Echo Data", detail: "3D echo · LV mass, LVEDV, LVESV · 2 analyzers" },
   echoCrew: { id: "BRSMCF CFT70 Echo 7 Subjects", detail: "7-subject crew subset" },
+  boneDxa: { id: "NASA MR035G bone densitometry (DXA)", detail: "74 bed-rest subjects · hip, spine, heel, forearm, whole body" },
 };
 
 function parseCsv(text) {
@@ -200,7 +201,7 @@ export const DB_METRIC = {
   lvidd: "lvid_d", lvids: "lvid_s", pvAt: "pv_at", pvEt: "pv_et", mE: "mitral_e", mA: "mitral_a", mDt: "mitral_dt",
   ict: "ivct", et: "lv_et", ivrt: "ivrt", tE: "tricuspid_e", tA: "tricuspid_a", tr: "tricuspid_regurgitation",
   rvS: "s_prime_tricuspid", hrR: "hr_tdi_right", sepS: "s_prime_septal", sepE: "e_prime_septal", latS: "s_prime_lateral",
-  latE: "e_prime_lateral", hrL: "hr_tdi_left", vp: "cmm_vp", vti: "lvot_vti", lvMass: "lv_mass", edv: "lvedv", esv: "lvesv",
+  latE: "e_prime_lateral", hrL: "hr_tdi_left", hr: "hr_tdi_left", vp: "cmm_vp", vti: "lvot_vti", lvMass: "lv_mass", edv: "lvedv", esv: "lvesv",
   sv: "stroke_volume", ef: "lvef", co: "cardiac_output", fs: "fractional_shortening", ea: "e_a_ratio", ee: "e_e_prime_avg",
   tei: "tei_index", rvsp: "rvsp",
 };

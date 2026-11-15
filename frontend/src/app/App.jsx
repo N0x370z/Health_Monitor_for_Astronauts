@@ -8,12 +8,14 @@ import HeartMonitor from "../ui/views/HeartMonitor.jsx";
 import Countermeasures from "../ui/views/Countermeasures.jsx";
 import CheckIn from "../ui/views/CheckIn.jsx";
 import { SystemDrawer } from "../ui/views/Panels.jsx";
-import Tour from "../ui/components/Tour.jsx";
+import Tour, { TourButton } from "../ui/components/Tour.jsx";
+import BoneDensity from "../ui/views/BoneDensity.jsx";
 
 const TABS = [
   ["heart", "Heart monitor", "heartLine", "Heart"],
   ["counter", "Countermeasures", "chart", "Crew"],
   ["checkin", "Daily check-in", "pen", "Log"],
+  ["bone", "Bone density", "body", "Bone"],
 ];
 
 const DEFAULT_SUBJECT = ECHO.crewIds.includes("6546") ? "6546" : SUBJECT_IDS[0];
@@ -29,6 +31,14 @@ export default function App() {
   const [chamberKey, setChamberKey] = useState(null);
   const [lastRandom, setLastRandom] = useState(null);
   const [spin, setSpin] = useState(false);
+  // Tutorial guiado: se abre la primera vez que se entra a cada sección (en esta visita) y con "How it works"
+  const [tourTab, setTourTab] = useState(null);
+  const [toured, setToured] = useState(() => new Set());
+  useEffect(() => {
+    if (toured.has(tab)) return undefined;
+    const id = setTimeout(() => { setTourTab(tab); setToured((s) => new Set(s).add(tab)); }, tab === "bone" ? 900 : 300);
+    return () => clearTimeout(id);
+  }, [tab, toured]);
 
   const subject = ECHO.subjects[subjectId];
   const hs = useMemo(() => heartState(subject, tpKey), [subject, tpKey]);
@@ -95,6 +105,7 @@ export default function App() {
     heart: [`Hello, Subject ${subject.id}!`, `${tp.long} · ${subject.treatment} — keep your heart strong.`],
     counter: ["Countermeasures", "What 70 days of bed rest did to 37 hearts — and what protected them."],
     checkin: ["Daily check-in", "How are you today? It takes less than a minute."],
+    bone: ["Bone density", "Which bones lose density without gravity — DXA scans of 74 bed-rest subjects."],
   }[tab];
 
   return (
@@ -106,12 +117,14 @@ export default function App() {
           <h1>Orbit Care</h1>
           <p>Astronaut health manager</p>
         </div>
+        <div className="nav-group" data-tour="nav">
         {TABS.map(([k, label, icon]) => (
           <button key={k} data-tour={`tab-${k}`} className={`nav-item ${tab === k ? "active" : ""}`} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
             <Icon name={icon} size={20} />{label}
             {k === "checkin" && !today?.done && <Dot status="warn" />}
           </button>
         ))}
+        </div>
         <div className="side-foot">
           <div className="side-user">
             <div className="avatar">{subject.id.slice(0, 2)}</div>
@@ -136,10 +149,15 @@ export default function App() {
             <p>{HEAD[1]}</p>
           </div>
           <div className="head-actions">
-            <button data-tour="random" className={`random-btn ${spin ? "spin" : ""}`} onClick={randomSample} title="Load a random subject and timepoint from the CFT70 database">
-              <Icon name="dice" size={22} /><span>Random data</span>
-            </button>
-            <small aria-live="polite">{lastRandom ? `Loaded: ${lastRandom}` : ECHO.source === "api" ? "Live from the CFT70 database (API)" : "Offline: bundled CFT70 echo files"}</small>
+            <div className="head-buttons">
+              <TourButton onClick={() => setTourTab(tab)} />
+              {tab !== "bone" && (
+                <button data-tour="random" className={`random-btn ${spin ? "spin" : ""}`} onClick={randomSample} title="Load a random subject and timepoint from the CFT70 database">
+                  <Icon name="dice" size={22} /><span>Random data</span>
+                </button>
+              )}
+            </div>
+            <small aria-live="polite">{lastRandom ? `Loaded: ${lastRandom}` : ECHO.source === "api" ? "Live from the project database (API)" : "Offline: bundled CFT70 echo files"}</small>
           </div>
         </div>
 
@@ -150,11 +168,12 @@ export default function App() {
           )}
           {tab === "counter" && <Countermeasures onOpenSubject={openSubject} />}
           {tab === "checkin" && <CheckIn key={person} history={history} onSubmit={submitCheckin} />}
+          {tab === "bone" && <BoneDensity />}
         </main>
       </div>
 
       {/* ---------- navegación inferior (móvil) ---------- */}
-      <nav className="mobile-nav" aria-label="Sections">
+      <nav className="mobile-nav" aria-label="Sections" data-tour="nav">
         {TABS.map(([k, , icon, short]) => (
           <button key={k} data-tour={`tab-${k}`} className={tab === k ? "active" : ""} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
             <Icon name={icon} size={22} />{short}
@@ -163,7 +182,7 @@ export default function App() {
         ))}
       </nav>
 
-      <Tour onStart={() => setTab("heart")} />
+      {tourTab === tab && <Tour key={tab} tab={tab} onClose={() => setTourTab(null)} />}
       <SystemDrawer system={drawerData} onClose={() => setChamberKey(null)} live={live} />
     </div>
   );
