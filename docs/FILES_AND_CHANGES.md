@@ -24,7 +24,7 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 │   ├── src/routes/knowledge.js   # alerts, cardiovascular problems, reference ranges
 │   ├── test/api.test.js          # 22 endpoint tests (node --test)
 │   └── test/stats.test.js        # 8 tests of the statistics module
-├── frontend/                     # ORBIT CARE (React + Vite); api/index.js runs the backend on Vercel; see frontend/README.md
+├── frontend/                     # ORBIT CARE (React + Vite) in layers: src/app, src/ui, src/domain, src/data; api/index.js runs the backend on Vercel; see frontend/README.md
 ├── data/
 │   ├── health_monitor.sqlite     # ★ the database (versioned)
 │   ├── schema.sql                # schema and views
@@ -50,6 +50,8 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 | Added docs | `docs/BONE_DENSITY.md`; bone sections in `README.md`, `data/README.md`, `DATA_SOURCES.md`, `DATA_METHODOLOGY.md`, `GLOSSARY.md` |
 | Updated | `data/schema.sql` (bone tables), `data/queries.sql` (queries 9 and 10) |
 | Not imported | Personal fields, absolute dates, body composition, Ward's triangle, single vertebrae, empty subregion files, screening scans |
+| Frontend | Bone density screen (`ui/views/BoneDensity.jsx`, `domain/bone.js`, `data/bone.js`); guided tour per screen in the app palette (`domain/tour.js`, `ui/components/Tour.jsx`); code moved into layers (`app/`, `ui/`, `domain/`, `data/`, `data/api.js`); ORBIT CARE v2.2 merged |
+| Fixes | Gap filling also applied to API data (the echo table failed in production); Countermeasures heart-rate chart asked for `metric=undefined` |
 
 ## Changes in v4 (2026-11-15): real data only and data mining
 

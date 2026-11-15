@@ -108,7 +108,8 @@ Terms and abbreviations needed to read the ORBIT CARE web app. Attention / Criti
 | **SpO₂** | Blood oxygen saturation. Listed under "Not in database": the app does not measure it. |
 | **API / Live / Offline** | Data source. *Live* means the data comes from the database through the API. *Offline* means it comes from the CSV files bundled with the app. |
 | **LIVE SIM** | Value simulated every second in the browser (pulse and SpO₂). The pulse starts from the measured heart rate. Not study data. |
-| **How it works** | Button that opens the mini tutorial of the current screen. |
+| **How it works** | Button that opens the guided tour of the current screen. |
+| *Italic value* | In the echo table: value missing in the study at that day, completed from the same database (same subject, group or all subjects). Hover to see from where. |
 | **Replay** | Steps automatically through the study timepoints, from Pre to R+3. |
 
 ## 9. Bone density (API and `docs/BONE_DENSITY.md`)

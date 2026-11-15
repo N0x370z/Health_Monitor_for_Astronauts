@@ -13,7 +13,7 @@ Our goal is to **detect these problems early and prevent them**. The monitor fol
 
 ## Features
 
-The ORBIT CARE web app shows the heart monitor, countermeasures (with the backend statistics) and the daily check-in, each with a short tutorial (**How it works**). Pulse and SpO₂ marked LIVE SIM are simulated; everything else is real study data. Everything below is available through the API; the screens not yet in the web app (team, data mining, problems) can be added from the same endpoints.
+The ORBIT CARE web app shows the heart monitor, countermeasures (with the backend statistics), the daily check-in and bone density. Each screen has a guided tour (**How it works**). Pulse and SpO₂ marked LIVE SIM are simulated; missing echo values are completed from the same database and shown in italics; everything else is measured study data.
 
 - **Heart monitor (per subject):**
   - cardiac score 0–100 by region (left ventricle, aortic outflow, rate and timing, mitral valve, right ventricle) at any timepoint (Pre, D7, D21, D30, D70, R+0, R+3);
@@ -28,7 +28,7 @@ The ORBIT CARE web app shows the heart monitor, countermeasures (with the backen
   - correlations between changes;
   - response phenotypes (k-means++).
 - **Problems and prevention:** the 7 cardiovascular problems of spaceflight, why they happen, what the data shows and how to prevent them.
-- **Bone density (API):** DXA of 74 bed-rest subjects (NASA MR035G). Bone loss by skeletal region against the scanner's least significant change, ranking of the most affected structures, and each subject's timeline.
+- **Bone density (web app and API):** DXA of 74 bed-rest subjects (NASA MR035G). Bone loss by skeletal region against the scanner's least significant change, ranking of the most affected structures, and each subject's timeline.
 
 ## Tech Stack
 
@@ -46,7 +46,7 @@ The database lives in the same repository (`data/`). The backend reads it direct
 ```text
 ┌──────────────────────────────────────────────────────────┐
 │ ORBIT CARE (Frontend) · React · Vite                     │
-│ ├── Heart monitor · Countermeasures · Daily check-in     │
+│ ├── Heart · Countermeasures · Check-in · Bone density    │
 │ └── fallback: CFT70 echo CSV bundled (offline)           │
 │            │                                             │
 │            ▼ GET /api/...  (JSON, same domain)           │
@@ -168,7 +168,7 @@ All endpoints are `GET` and return JSON. Timepoints accept `Pre, D7, D21, D30, D
 
 ```text
 ├── backend/       # Node.js API (src/routes, src/services, test/)
-├── frontend/      # ORBIT CARE (React + Vite) + Vercel API function (api/)
+├── frontend/      # ORBIT CARE (React + Vite) in layers: app / ui / domain / data; Vercel API function (api/)
 ├── data/          # health_monitor.sqlite, schema.sql, queries.sql
 ├── docs/          # monitoring logic, sources, methodology, files and changes, prompts
 └── README.md
@@ -179,6 +179,7 @@ Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGE
 ## Changelog
 
 ### v5: bone density
+- **Frontend:** new Bone density screen (which bones lose density, what to watch, subject timeline), a guided tour per screen in the app's palette, and the code organized in layers (`app/`, `ui/`, `domain/`, `data/`). Merged ORBIT CARE v2.2 (check-in with week and badges, health-tip arrows, gap filling marked in italics) and Erik's early-warning validation (`/api/analytics/early-warning`). Fixed: the echo table failed when the data came from the API, and the heart-rate chart in Countermeasures asked the API for an unknown metric.
 - Ordered the NASA MR035G DXA files (1,064 files, 4 bed rest campaigns) into one set of tables in the project database: `bone_campaign`, `bone_subject`, `bone_region`, `bone_parameter`, `bone_measurement` and the view `v_bone_visit`.
 - Kept only what is needed to assess bone loss (BMD, BMC, T-score, Z-score at 11 regions). Removed personal fields, absolute dates, body composition and duplicated scans (38,493 → 19,727 rows).
 - Extracted the most relevant parameters and structures: the precision and least significant change of every region come from the repeated scans, and the regions are ranked by the bone loss measured in the data. Key regions: total hip, intertrochanteric region, trochanter, pelvis, heel and femoral neck. Controls: forearm and arms.
@@ -245,7 +246,7 @@ Full details: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md) and [`doc
 
 ## Future Work
 
-- Show more of the API in ORBIT CARE (score by region, predictors, phenotypes)
+- Show more of the API in ORBIT CARE (score by region, predictors, phenotypes, early warning)
 - Daily check-in storage (requires a write path; the database is read-only today)
 - Validation of the score on an independent cohort or spaceflight data
 - Medical review of the heuristic thresholds, region weights and score bands

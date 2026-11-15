@@ -41,6 +41,8 @@ Prompts que funcionaron bien al construir este proyecto con un asistente de IA, 
 - *"Calcula el error del densitómetro con los escaneos repetidos y no cuentes como pérdida un cambio menor al cambio mínimo significativo."*
 
 ## 6. Frontend
+- *"Agrega la pantalla de densidad ósea al frontend y organiza los archivos en capas (app, interfaz, dominio, datos)."*
+- *"Mejora el tutorial para que sea funcional y combine con la paleta de colores; revísalo con capturas en escritorio y móvil."*
 - *"Crea un frontend con React y Recharts, con un diseño limpio y claro: vista general de la tripulación por riesgo, detalle de cada tripulante con signos vitales de 24 h, alertas con acción recomendada y tendencia de ecocardiogramas comparada con el estudio de referencia."*
 - *"Toma capturas de la interfaz con un navegador sin interfaz gráfica y corrige lo que se vea mal (gráficas, espacios, textos que se enciman)."*
 - *"Revisa si la rama del frontend de mi compañero necesita merge, intégrala sin perder su historial y corrige los errores que encuentres (datos personales, fórmulas distintas a la base, documentación desactualizada)."*

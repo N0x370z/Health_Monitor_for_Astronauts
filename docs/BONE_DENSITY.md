@@ -88,7 +88,14 @@ Live values: `GET /api/bone`. Query: `data/queries.sql` (queries 9 and 10).
 - The precision comes from repeated scans on the same day, so it is a lower bound of the real error (repositioning only).
 - Campaign 1 and the AG pilot are stored, but they are not used in the analysis because their phases are unknown.
 
-## 5. API
+## 5. Web app
+The **Bone density** screen of ORBIT CARE (`frontend/src/ui/views/BoneDensity.jsx`) shows:
+- the biggest loss, the share of subjects beyond the scanner error, the control site and the number of subjects;
+- **Which bones lose density:** diverging bars of the mean change by region, with the 95 % CI and the scanner error band (±LSC); red bars are significant losses;
+- **What to watch:** key structures, controls and parameters;
+- **Subject timeline:** % change of BMD from Pre at each visit, colored as real loss (> LSC), large loss (> 2 × LSC), within error or gain, plus the latest Z-score.
+
+## 6. API
 | Endpoint | Description |
 |---|---|
 | `/api/bone` | Campaigns, parameters, regions with bone loss statistics and the ranking |
