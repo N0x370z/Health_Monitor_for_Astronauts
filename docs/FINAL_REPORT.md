@@ -71,7 +71,7 @@ Bed rest and spaceflight cause the same two problems this system tracks: cardiac
 
 **Design inspiration.**
 - **SpaceGenes+ (Space Apps 2025).** This project from the 2025 challenge *Build a Space Biology Knowledge Engine* turns NASA GeneLab data (OSD-288) into an interactive dashboard of how radiation, microgravity and both together affect the body. We used it as a reference for turning a NASA archive into a dashboard that people can read, and its page design as the style reference for our web app. Our focus is different: it looks at gene expression in mice, and we look at heart and bone health in people.
-- **Consumer wearables.** The Garmin app for its watches, and similar apps for fitness bands, inspired the charts, the daily check-in and the badges. We moved that experience from everyday users to astronauts and to cardiovascular and bone risks.
+- **Consumer wearables.** The Garmin app for its watches, and similar apps for fitness bands, inspired the charts, the daily check-in and the badges. GitHub's feature-tour tooltips inspired the guided tour on each screen. We moved that experience from everyday users to astronauts and to cardiovascular and bone risks.
 
 **Gap addressed.** Published studies report group averages. Few tools apply these error thresholds per subject and turn them into actions. None we found combine cardiac and bone data from the public NASA archives in one open, reproducible system.
 
@@ -387,6 +387,6 @@ All tools are open source or free to use.
 | [ESLint 9](https://eslint.org) | Front-end code checks | MIT |
 | [Vercel](https://vercel.com) | Hosting of the web app and API | Free tier |
 | [GitHub](https://github.com/N0x370z/Health_Monitor_for_Astronauts) | Code and data repository | — |
-| Visual references (style only, not copied into the app) | The [SpaceGenes+ project page](https://www.spaceappschallenge.org/2025/find-a-team/spacegenes/?tab=project) (Space Apps 2025) and the Garmin watch app | — |
+| Visual references (style only, not copied into the app) | The [SpaceGenes+ project page](https://www.spaceappschallenge.org/2025/find-a-team/spacegenes/?tab=project) (Space Apps 2025), the Garmin watch app, and GitHub's "Try the new pull requests Overview page" tooltip as the model for the guided tour | — |
 
 Charts and icons are drawn with our own inline SVG; no chart or icon library is used.
