@@ -1,10 +1,10 @@
 # Data
 
-**`data/health_monitor.sqlite`** is the project database: SQLite, about 3.6 MB, versioned in the repository. The backend reads it directly in read-only mode.
+**`data/health_monitor.sqlite`** is the project database: SQLite, about 6.6 MB, versioned in the repository. The backend reads it directly in read-only mode.
 
-**Focus:** cardiovascular problems caused by spaceflight (orthostatic intolerance, cardiac atrophy, reduced stroke volume, tachycardia, blood pressure, diastolic changes, radiation-induced circulatory disease), measured on the **real NASA CFT70 echocardiography** of 37 bed-rest subjects.
+**Focus:** cardiovascular problems caused by spaceflight (orthostatic intolerance, cardiac atrophy, reduced stroke volume, tachycardia, blood pressure, diastolic changes, radiation-induced circulatory disease), measured on the **real NASA CFT70 echocardiography** of 37 bed-rest subjects. Since v5 it also holds **bone densitometry (DXA)** of 74 bed-rest subjects (NASA MR035G), to assess bone loss.
 
-> Only real data and knowledge with a cited source. No synthetic data since v4. No personal data: study subjects keep NASA's anonymous codes and the 3D image analysts are coded A1–A3.
+> Only real data and knowledge with a cited source. No synthetic data since v4. No personal data: study subjects keep NASA's anonymous codes and the 3D image analysts are coded A1–A3. From the DXA files, names, birth dates, ethnicity and absolute dates were not imported.
 > Sources: [`docs/DATA_SOURCES.md`](../docs/DATA_SOURCES.md) · Method: [`docs/DATA_METHODOLOGY.md`](../docs/DATA_METHODOLOGY.md) · Monitoring logic: [`docs/CARDIOVASCULAR_MONITORING.md`](../docs/CARDIOVASCULAR_MONITORING.md)
 
 ## Tables
@@ -17,13 +17,18 @@
 | | `change_threshold` | 7 | % change from the personal baseline that triggers warning or critical |
 | | `countermeasure` / `problem_countermeasure` | 8 / 18 | Countermeasures and which problem each one prevents or treats |
 | | `alert_rule` | 25 | Condition → level → recommended action → countermeasure |
-| | `source` | 26 | Citations (DOIs verified) |
+| | `source` | 33 | Citations (DOIs verified) |
 | Real study (NASA CFT70) | `study`, `study_group`, `study_subject`, `study_timepoint` | 1 / 5 / 38 / 7 | 70-day bed rest study, groups, subjects and timepoints (with short labels Pre, D7 … R+3) |
 | | `study_echo_measurement` | 8,753 | 7,890 imported echo values (2D/Doppler/TDI and 3D, with quality flag) + 863 derived values |
 | Cardiac score | `cardiac_region`, `region_metric` | 5 / 15 | Heart regions shown by the frontend and the metrics (with weights) that make up each one |
+| Bone density (NASA MR035G DXA) | `bone_campaign`, `bone_subject` | 4 / 74 | Bed rest campaigns (UTMB Campaign 3 and 1, AG pilot, MEDES) and anonymous subjects with sex, height and weight |
+| | `bone_region`, `bone_parameter` | 11 / 4 | Skeletal regions with their role (key / supporting / control), rationale, precision and least significant change; parameters BMD, Z-score, T-score, BMC |
+| | `bone_measurement` | 19,727 | One row per DXA scan, region, side and parameter, with visit (PRE, BR_END, R+n, follow-up) and quality flag |
 | NASA evidence | `nasa_dataset`, `nasa_experiment`, `nasa_dataset_experiment`, `nasa_evidence_finding` | 829 / 158 / 2,592 / 237 | Public LSDA records related to cardiovascular function |
 
-Views: `v_study_3d_mean` (3D echo averaged over analysts), `v_problem_evidence`.
+Views: `v_study_3d_mean` (3D echo averaged over analysts), `v_problem_evidence`, `v_bone_visit` (mean of the repeated DXA scans of each visit).
+
+Bone data, method and results: [`docs/BONE_DENSITY.md`](../docs/BONE_DENSITY.md).
 
 ### Derived metrics (`method = 'DERIVED'`)
 

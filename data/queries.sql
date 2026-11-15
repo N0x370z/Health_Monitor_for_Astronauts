@@ -70,3 +70,27 @@ SELECT experiment_id, experiment_title, finding_text
 FROM v_problem_evidence
 WHERE problem_code = 'ORTHOSTATIC_INTOLERANCE' AND is_quantitative
 LIMIT 5;
+
+-- 9. BONE: regions kept, their role and measurement error (least significant change)
+SELECT sort_order, region_code, name, role, weight_bearing, precision_cv_pct, lsc_pct
+FROM bone_region
+ORDER BY sort_order;
+
+-- 10. BONE: BMD change from PRE to the end of bed rest by region (Campaign 3 and MEDES; hips averaged)
+WITH v AS (
+  SELECT subject_code, region_code, visit_code, AVG(value) AS bmd
+  FROM v_bone_visit WHERE parameter = 'bmd' GROUP BY subject_code, region_code, visit_code
+), ends AS (
+  SELECT subject_code, region_code,
+         COALESCE(MAX(CASE WHEN visit_code = 'BR_END' THEN bmd END),
+                  MAX(CASE WHEN visit_code = 'R+1' THEN bmd END), MAX(CASE WHEN visit_code = 'R+2' THEN bmd END),
+                  MAX(CASE WHEN visit_code = 'R+3' THEN bmd END), MAX(CASE WHEN visit_code = 'R+4' THEN bmd END)) AS end_bmd,
+         MAX(CASE WHEN visit_code = 'PRE' THEN bmd END) AS pre_bmd
+  FROM v GROUP BY subject_code, region_code
+)
+SELECT e.region_code, r.role, COUNT(*) AS n,
+       ROUND(AVG((end_bmd - pre_bmd) / pre_bmd * 100), 2) AS mean_pct_change,
+       SUM((end_bmd - pre_bmd) / pre_bmd * 100 <= -r.lsc_pct) AS subjects_beyond_lsc
+FROM ends e JOIN bone_region r USING (region_code)
+WHERE end_bmd IS NOT NULL AND pre_bmd IS NOT NULL
+GROUP BY e.region_code ORDER BY mean_pct_change;

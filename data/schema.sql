@@ -231,3 +231,65 @@ SELECT e.problem_code, p.name_es AS problem_name, e.metric_code, e.finding_text,
 FROM nasa_evidence_finding e
 JOIN nasa_experiment x ON x.experiment_key = e.experiment_key
 JOIN cv_problem p ON p.problem_code = e.problem_code;
+
+-- ── Bone densitometry (v5): NASA MR035G DXA — UTMB bed rest campaigns, AG pilot and MEDES ──
+CREATE TABLE bone_campaign (
+    campaign_code   TEXT PRIMARY KEY,            -- UTMB_C3, MEDES, UTMB_C1, UTMB_AG_PILOT
+    title           TEXT NOT NULL,
+    design          TEXT NOT NULL,
+    has_phases      BOOLEAN NOT NULL,            -- 1 = the files label scans PRE / IN / POST bed rest
+    source_id       TEXT NOT NULL REFERENCES source(source_id),
+    data_source_id  TEXT NOT NULL REFERENCES source(source_id)
+);
+CREATE TABLE bone_subject (                      -- anonymous NASA codes; no names, birth dates or ethnicity
+    subject_code    TEXT PRIMARY KEY,            -- <campaign prefix>-<NASA subject id>, e.g. C3-224
+    campaign_code   TEXT NOT NULL REFERENCES bone_campaign(campaign_code),
+    cohort          TEXT,                        -- Campaign 3 cohort (C3A ... C3H)
+    sex             TEXT CHECK (sex IN ('M', 'F')),
+    height_cm       REAL,                        -- at the first scan
+    weight_kg       REAL                         -- at the first scan
+);
+CREATE TABLE bone_region (                       -- skeletal regions kept, and how relevant each is for bone loss
+    region_code         TEXT PRIMARY KEY,
+    site                TEXT NOT NULL,           -- hip, spine, heel, forearm, whole_body
+    name                TEXT NOT NULL,
+    weight_bearing      BOOLEAN NOT NULL,
+    role                TEXT NOT NULL CHECK (role IN ('key', 'supporting', 'control')),
+    rationale           TEXT NOT NULL,           -- why: result in the data + literature
+    source_id           TEXT NOT NULL REFERENCES source(source_id),
+    sort_order          INTEGER NOT NULL,
+    precision_cv_pct    REAL,                    -- RMS-SD of repeated PRE scans / mean (Glüer 1995)
+    lsc_pct             REAL,                    -- least significant change, 95 % = 2.77 × CV (ISCD)
+    n_precision_visits  INTEGER NOT NULL         -- PRE visits with ≥ 2 repeated scans used for the precision
+);
+CREATE TABLE bone_parameter (                    -- parameters kept and how to read them
+    parameter       TEXT PRIMARY KEY,            -- bmd, z_score, t_score, bmc
+    name            TEXT NOT NULL,
+    unit            TEXT NOT NULL,
+    role            TEXT NOT NULL CHECK (role IN ('primary', 'supporting')),
+    interpretation  TEXT NOT NULL,
+    source_id       TEXT NOT NULL REFERENCES source(source_id)
+);
+CREATE TABLE bone_measurement (                  -- long format: one row per scan, region, side and parameter
+    measurement_id        INTEGER PRIMARY KEY,
+    subject_code          TEXT NOT NULL REFERENCES bone_subject(subject_code),
+    region_code           TEXT NOT NULL REFERENCES bone_region(region_code),
+    side                  TEXT CHECK (side IN ('L', 'R')),
+    visit_code            TEXT NOT NULL,         -- PRE, BR_MID, BR_END, R+n, FU_6MO, FU_1Y, FOLLOW_UP; V1, V2… when the files have no phase
+    phase                 TEXT NOT NULL CHECK (phase IN ('PRE_TEST', 'IN_TEST', 'POST_TEST', 'FOLLOW_UP', 'UNKNOWN')),
+    phase_day             INTEGER,               -- BR_DAY as written in the files (days before / into / after bed rest)
+    days_from_first_scan  INTEGER,               -- relative day; absolute dates are not stored
+    scan_index            INTEGER NOT NULL,      -- repeated scan within the same visit (1, 2, 3)
+    parameter             TEXT NOT NULL REFERENCES bone_parameter(parameter),
+    value                 REAL NOT NULL,         -- bmd g/cm², bmc g, scores in SD units
+    quality_flag          TEXT NOT NULL CHECK (quality_flag IN ('ok', 'scanner_corrected')),
+    source_file           TEXT NOT NULL
+);
+CREATE INDEX ix_bone_measurement ON bone_measurement (region_code, parameter, visit_code);
+CREATE INDEX ix_bone_measurement_subject ON bone_measurement (subject_code);
+-- Mean of the repeated scans of each visit (what the analysis uses).
+CREATE VIEW v_bone_visit AS
+SELECT subject_code, region_code, side, visit_code, phase, parameter,
+       AVG(value) AS value, COUNT(*) AS n_scans, MIN(days_from_first_scan) AS days_from_first_scan
+FROM bone_measurement
+GROUP BY subject_code, region_code, side, visit_code, phase, parameter;
