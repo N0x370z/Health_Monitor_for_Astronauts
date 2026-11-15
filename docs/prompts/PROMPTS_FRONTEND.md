@@ -132,8 +132,8 @@ ROL
 Diseñador UI + desarrollador React con criterio visual alto.
 
 CONTEXTO
-[adjuntar imagen de referencia del "Gestor de Salud" y foto de la pantalla de la ISS]
-Quiero un panel principal con el CORAZÓN como protagonista (como la figura del cuerpo en la pantalla de la ISS),
+[adjuntar captura de la página de SpaceGenes+ (Space Apps 2025) como referencia de estilo]
+Quiero un panel principal con el CORAZÓN como protagonista (como figura central del panel),
 con el estilo claro de la imagen de referencia. Toma la referencia SOLO como guía de estilo.
 
 TAREA
