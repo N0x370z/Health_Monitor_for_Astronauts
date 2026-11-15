@@ -1,5 +1,7 @@
 # Health Monitor for Astronauts: Final Technical Report
 
+**Authors:** Ivan Luna Martínez, Cristhian Antonio Aguilar Vazquez, Erik Ulises Flores Contreras, Jorge Mauricio Sandoval Gómez, Jonathan Fructuoso Mercado
+
 NASA Space Apps Challenge 2026 · 15 November 2026
 
 ## Abstract
