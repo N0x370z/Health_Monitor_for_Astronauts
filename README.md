@@ -31,22 +31,22 @@ Our goal is to **detect these problems early and prevent them**. The monitor fol
 
 | Layer | Technology |
 |---|---|
-| Frontend | React, JavaScript, Recharts, Vite (skeleton; the new design is being developed by the team) |
+| Frontend | ORBIT CARE: React 19, Vite. Static and offline (reads the bundled CFT70 echo CSV files); deployed on Vercel |
 | Backend | Node.js 22, built-in modules only (`node:http`, `node:sqlite`). No framework, no dependencies |
 | Database | SQLite: `data/health_monitor.sqlite` (schema portable to PostgreSQL) |
 | Data | NASA CFT70 / BRSMCF echocardiography (real) and NASA LSDA evidence (real). No synthetic data |
 
 ## Architecture
 
-The database lives in the same repository (`data/`). The backend reads it directly, in read-only mode, and serves the web app through a JSON API.
+The database lives in the same repository (`data/`). The backend reads it directly, in read-only mode, and serves a JSON API with the statistics and data mining. The ORBIT CARE frontend is a static site that works offline with the same CFT70 echo data bundled as CSV files; connecting it to the API is future work.
 
 ```text
 ┌──────────────────────────────────────────────────────────┐
-│ React (Frontend) · Vite · Recharts                       │
-│ ├── Heart monitor · Countermeasures · Team               │
-│ └── Problems and prevention                              │
-│            │                                             │
-│            ▼ GET /api/...  (JSON)                        │
+│ ORBIT CARE (Frontend, static, Vercel) · React · Vite     │
+│ ├── Heart monitor · Countermeasures · Daily check-in     │
+│ └── CFT70 echo CSV bundled (works offline)               │
+├──────────────────────────────────────────────────────────┤
+│            JSON API  (GET /api/...)                      │
 ├──────────────────────────────────────────────────────────┤
 │ Node.js (Backend, no framework)                          │
 │ ├── routes: subjects, study, analytics, knowledge        │
@@ -101,7 +101,8 @@ npm test                # 27 tests (endpoints, errors and statistics)
 ```bash
 cd frontend
 npm install
-npm run dev             # http://localhost:5173 (proxies /api to the backend)
+npm run dev             # http://localhost:5173 (static, does not need the backend)
+npm run build           # dist/ (Vercel: root directory `frontend`, framework Vite)
 ```
 
 ## Environment Variables (backend)
@@ -137,7 +138,7 @@ All endpoints are `GET` and return JSON. Timepoints accept `Pre, D7, D21, D30, D
 
 ```text
 ├── backend/       # Node.js API (src/routes, src/services, test/)
-├── frontend/      # React dashboard (skeleton)
+├── frontend/      # ORBIT CARE (React + Vite, static, offline)
 ├── data/          # health_monitor.sqlite, schema.sql, queries.sql
 ├── docs/          # monitoring logic, sources, methodology, files and changes, prompts
 └── README.md
@@ -168,7 +169,8 @@ Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGE
 - Hardening: a malformed URL returns 400 instead of stopping the server; change analyses (countermeasures, correlations, phenotypes) reject the baseline `Pre` with 400.
 
 **Frontend**
-- Not modified. Its crew views no longer receive data; the new design uses the subject endpoints.
+- Replaced the skeleton with the team's ORBIT CARE v2 design (branch `v2-frontend`, history kept): heart monitor, countermeasures and daily check-in, offline with the CFT70 echo CSV files.
+- Fixes: 3D echo analysts coded A1–A3 as in the database; RVSP uses RAP 3 mmHg like the database (it used 5); NASA logo as the page icon.
 
 ### v3: cardiovascular focus
 
@@ -205,7 +207,7 @@ Full details: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md) and [`doc
 
 ## Future Work
 
-- Connect the new frontend design to the subject endpoints
+- Connect ORBIT CARE to the API (statistics, predictors, phenotypes) instead of the bundled CSV files
 - Daily check-in storage (requires a write path; the database is read-only today)
 - Validation of the score on an independent cohort or spaceflight data
 - Medical review of the heuristic thresholds, region weights and score bands

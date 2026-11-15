@@ -22,7 +22,7 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 │   ├── src/routes/knowledge.js   # alerts, cardiovascular problems, reference ranges
 │   ├── test/api.test.js          # 19 endpoint tests (node --test)
 │   └── test/stats.test.js        # 8 tests of the statistics module
-├── frontend/                     # skeleton dashboard (React + Recharts + Vite), not updated in v4
+├── frontend/                     # ORBIT CARE (React + Vite), static and offline; see frontend/README.md
 ├── data/
 │   ├── health_monitor.sqlite     # ★ the database (versioned)
 │   ├── schema.sql                # schema and views
@@ -57,10 +57,10 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 | Added | `services/dataset.js`, `services/stats.js`, `services/assessment.js`, `services/analytics.js`, `routes/subjects.js` |
 | Added | `/api/subjects`, `/api/subjects/:code`, `/api/subjects/:code/echo`, `/api/study/cft70/countermeasures`, `/api/analytics/reliability`, `/correlations`, `/predictors`, `/phenotypes` |
 | Changed | `/api/alerts` (by timepoint and group), `/api/study/cft70/effects` (CI, tests, effect size), `/api/reference` (regions) |
-| Tests | 9 → 25 |
+| Tests | 9 → 27 |
 
 ### Frontend
-Not modified. The skeleton views that used `/api/crew` and `/api/missions` no longer receive data; the new design developed by the team uses the subject endpoints.
+The skeleton was replaced by the team's ORBIT CARE v2 (branch `v2-frontend`, merged keeping its history). It reads the CFT70 echo CSV files bundled in `frontend/src/data/echo/`. Fixes made on integration: analysts coded A1–A3 (the CSV had their names), RVSP with RAP 3 mmHg like the database, README updated to the existing files, NASA logo as favicon (`public/favicon.png`).
 
 ## Changes in v3
 
