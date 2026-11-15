@@ -10,6 +10,9 @@ import CheckIn from "../ui/views/CheckIn.jsx";
 import { SystemDrawer } from "../ui/views/Panels.jsx";
 import Tour, { TourButton } from "../ui/components/Tour.jsx";
 import BoneDensity from "../ui/views/BoneDensity.jsx";
+import AlertBanner from "../ui/components/AlertBanner.jsx";
+import { useCrewAlerts } from "../data/alerts.js";
+import { alertSummary } from "../domain/alerts.js";
 
 const TABS = [
   ["heart", "Heart monitor", "heartLine", "Heart"],
@@ -44,6 +47,9 @@ export default function App() {
   const hs = useMemo(() => heartState(subject, tpKey), [subject, tpKey]);
   const fnd = useMemo(() => findings(subject, tpKey), [subject, tpKey]);
   const live = useLiveVitals(subject, tpKey);
+  // Alertas del tripulante: de la API (reglas de la base) o, sin API, del estado calculado aquí
+  const alerts = useCrewAlerts(subject.id, tpKey, fnd);
+  const alertSum = alertSummary(alerts.list);
   const today = history.find((d) => d.day === TODAY);
 
   // Reproducir la línea de tiempo del estudio
@@ -122,6 +128,9 @@ export default function App() {
           <button key={k} data-tour={`tab-${k}`} className={`nav-item ${tab === k ? "active" : ""}`} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
             <Icon name={icon} size={20} />{label}
             {k === "checkin" && !today?.done && <Dot status="warn" />}
+            {k === "heart" && alertSum.level !== "ok" && (
+              <span className={`nav-count ${alertSum.level}`} aria-label={`${alertSum.crit + alertSum.warn} health alerts`}>{alertSum.crit || alertSum.warn}</span>
+            )}
           </button>
         ))}
         </div>
@@ -162,6 +171,7 @@ export default function App() {
         </div>
 
         <main>
+          {tab === "heart" && <AlertBanner key={`${subject.id}-${tpKey}`} alerts={alerts} source={alerts.source} />}
           {tab === "heart" && (
             <HeartMonitor subject={subject} tpKey={tpKey} setTp={(k) => { setPlaying(false); setTpKey(k); }} hs={hs} findings={fnd}
               onSelectChamber={setChamberKey} selectedChamber={chamberKey} playing={playing} onPlay={play} live={live} />
@@ -178,6 +188,9 @@ export default function App() {
           <button key={k} data-tour={`tab-${k}`} className={tab === k ? "active" : ""} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
             <Icon name={icon} size={22} />{short}
             {k === "checkin" && !today?.done && <Dot status="warn" />}
+            {k === "heart" && alertSum.level !== "ok" && (
+              <span className={`nav-count ${alertSum.level}`} aria-label={`${alertSum.crit + alertSum.warn} health alerts`}>{alertSum.crit || alertSum.warn}</span>
+            )}
           </button>
         ))}
       </nav>

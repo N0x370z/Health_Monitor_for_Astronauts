@@ -41,6 +41,7 @@ Prompts que funcionaron bien al construir este proyecto con un asistente de IA, 
 - *"Calcula el error del densitómetro con los escaneos repetidos y no cuentes como pérdida un cambio menor al cambio mínimo significativo."*
 
 ## 6. Frontend
+- *"¿Se añadió una alerta a los tripulantes si hay algún riesgo? Agrega un banner de alertas arriba del Heart monitor con las alertas de `/api/subjects/:code` (nivel, qué pasa, qué hacer, contramedida y la alerta de tendencia), con respaldo local si la API no responde. Súbelo y documenta."*
 - *"Agrega la pantalla de densidad ósea al frontend y organiza los archivos en capas (app, interfaz, dominio, datos)."*
 - *"Mejora el tutorial para que sea funcional y combine con la paleta de colores; revísalo con capturas en escritorio y móvil."*
 - *"Crea un frontend con React y Recharts, con un diseño limpio y claro: vista general de la tripulación por riesgo, detalle de cada tripulante con signos vitales de 24 h, alertas con acción recomendada y tendencia de ecocardiogramas comparada con el estudio de referencia."*

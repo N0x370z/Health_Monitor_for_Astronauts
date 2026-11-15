@@ -4,6 +4,7 @@ export const TOURS = {
   heart: [
     { sel: '[data-tour="nav"]', title: "Four sections", body: "Heart monitor, Countermeasures, Daily check-in and Bone density. Each one has its own short tour; reopen it any time with How it works." },
     { sel: '[data-tour="random"]', title: "Load a crew member", body: "Each subject is a real participant of NASA's 70-day bed rest study (CFT70). Random data loads another subject and study day; the check-in starts from zero." },
+    { sel: '[data-tour="alerts"]', title: "Health alerts", body: "If something is at risk, it shows here first: what changed, why it matters and what to do, with its countermeasure. Red means act today; the number on Heart monitor counts the alerts." },
     { sel: '[data-tour="timeline"]', title: "Travel through the mission", body: "Pre is before bed rest, D7–D70 are days in bed (like days in space) and R+0 / R+3 are the return to gravity. Use ‹ › or Replay." },
     { sel: '[data-tour="pulse"]', title: "Live pulse & oxygen", body: "Marked LIVE SIM: simulated every second, starting from the real heart rate in the database. Everything else is measured echo data." },
     { sel: ".hm-heart svg", title: "Tap a part of the heart", body: "Green Nominal, blue Watch, amber Attention, red Critical. Each region opens its values, what they mean and what to do. Rate & timing shows a live ECG." },

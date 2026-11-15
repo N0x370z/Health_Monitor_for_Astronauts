@@ -181,6 +181,7 @@ export function subjectAlerts(subject, tp) {
         level_label: e.status_label,
         metric_code: e.metric_code,
         metric_name: e.name_es,
+        metric_name_en: m?.name_en ?? e.metric_code,
         unit: e.unit,
         value: e.value,
         pct_change: e.pct_change,
@@ -235,6 +236,12 @@ export function recommendations(subject, tp, alerts) {
     action_es: a.action,
     countermeasure_code: a.countermeasure_code,
     metric_code: a.metric_code,
+    // Campos estructurados para que el frontend arme el texto en inglés
+    rule_id: a.rule_id,
+    metric_name_en: a.metric_name_en,
+    value: a.value,
+    unit: a.unit,
+    pct_change: a.pct_change,
   }));
   const ev = groupEvidence(subject, tp);
   if (ev) recs.push({ kind: 'group_evidence', level: 'info', title_es: `Evidencia grupal · ${findTimepoint(tp).short_label}`, detail_es: ev.text_es, action_es: null, countermeasure_code: GROUP_COUNTERMEASURE[ev.best.group_code], metric_code: 'lv_mass' });
@@ -253,6 +260,9 @@ export function recommendations(subject, tp, alerts) {
       action_es: 'Confirmar con una segunda medición y verificar que la contramedida se cumple.',
       countermeasure_code: 'MEDICAL_CONSULT',
       metric_code: traj.metric.metric_code,
+      metric_name_en: metrics.get(traj.metric.metric_code)?.name_en ?? traj.metric.metric_code,
+      since_timepoint: traj.alarm_tp,
+      sigma_pct: traj.sigma_pct,
     });
   }
 

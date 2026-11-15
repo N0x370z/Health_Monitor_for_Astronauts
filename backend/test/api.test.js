@@ -68,6 +68,23 @@ test('sujeto 6546 al D70: coincide con el estudio y recomienda ejercicio', async
   assert.equal((await getJson('/api/subjects/S6546')).body.subject.nasa_id, '6546');
 });
 
+test('alertas para el tripulante: campos estructurados para la interfaz en inglés', async () => {
+  const { body } = await getJson('/api/subjects/6319?timepoint=D70');
+  const alerts = body.recommendations.filter((r) => r.kind === 'alert');
+  assert.ok(alerts.length > 0);
+  for (const r of alerts) {
+    assert.ok(['critical', 'warning'].includes(r.level));
+    assert.ok(r.metric_name_en && !/[áéíóúñ]/i.test(r.metric_name_en));
+    assert.ok('rule_id' in r && 'pct_change' in r && 'value' in r);
+  }
+  const lv = alerts.find((r) => r.metric_code === 'lv_mass');
+  assert.equal(lv.rule_id, 'AR06');
+  assert.equal(lv.metric_name_en, 'LV mass (3D echo)');
+  const trend = body.recommendations.find((r) => r.kind === 'trend');
+  assert.equal(trend.since_timepoint, 'D7');
+  assert.ok(trend.sigma_pct > 0);
+});
+
 test('momentos: R+0 funciona con "+" y con "%2B"', async () => {
   const a = await getJson('/api/subjects/6546?timepoint=R+0');
   const b = await getJson('/api/subjects/6546?timepoint=R%2B0');

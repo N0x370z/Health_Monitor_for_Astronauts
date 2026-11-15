@@ -597,3 +597,31 @@ svg [role="button"]:focus-visible text:first-of-type { text-decoration: underlin
 
 .head-buttons { display: flex; gap: 8px; }
 .nav-group { display: flex; flex-direction: column; gap: 6px; }
+
+/* ================= alertas del tripulante ================= */
+.alert-banner { border-radius: var(--radius-md); border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); margin-bottom: 16px; padding: 14px 16px; }
+.alert-banner.ok { display: flex; gap: 12px; align-items: center; background: #effaf3; border-color: #c7ead6; color: #14532d; }
+.alert-banner.warn { background: #fff8eb; border-color: #f6d39a; color: #7c4a03; }
+.alert-banner.crit { background: #fff1f3; border-color: #f5b3c1; color: #881337; border-left: 6px solid var(--crit); }
+.alert-banner.crit:not(.seen) { animation: ab-pulse 2s ease-in-out 3; }
+@keyframes ab-pulse { 50% { box-shadow: 0 0 0 6px rgba(225, 29, 72, .15), var(--shadow); } }
+.ab-head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.ab-ico { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.7); }
+.alert-banner.crit .ab-ico { color: var(--crit); } .alert-banner.warn .ab-ico { color: var(--warn); } .alert-banner.ok .ab-ico { color: var(--ok); }
+.ab-body { flex: 1; min-width: 200px; display: grid; gap: 2px; font-size: 14px; }
+.ab-body b { font-size: 15px; }
+.ab-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.ab-actions .btn { padding: 8px 12px; font-size: 13px; }
+.ab-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; color: var(--text); }
+.ab-item { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.ab-item b { font-size: 14px; }
+.ab-item p { margin: 3px 0 0; font-size: 13px; color: var(--text-2); }
+.ab-item p span { font-weight: 700; color: var(--text); }
+.ab-chip { flex: none; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 3px 8px; border-radius: 999px; margin-top: 1px; }
+.ab-chip.crit { background: #ffe4e9; color: #9f1239; } .ab-chip.warn { background: #fff3dc; color: #92400e; } .ab-chip.info { background: var(--primary-soft); color: var(--primary); }
+.ab-foot { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; font-size: 12px; color: var(--text-2); padding: 2px 4px; }
+.nav-count { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--crit); color: #fff; font-size: 12px; font-weight: 800; display: inline-grid; place-items: center; }
+.nav-count.warn { background: var(--warn); }
+.mobile-nav button { position: relative; }
+.mobile-nav .nav-count { position: absolute; top: 2px; right: 14%; min-width: 18px; height: 18px; font-size: 11px; padding: 0 4px; }
+@media (prefers-reduced-motion: reduce) { .alert-banner.crit:not(.seen) { animation: none; } }

@@ -23,7 +23,7 @@ The ORBIT CARE web app shows the heart monitor, countermeasures (with the backen
 - **Heart monitor (per subject):**
   - cardiac score 0–100 by region (left ventricle, aortic outflow, rate and timing, mitral valve, right ventricle) at any timepoint (Pre, D7, D21, D30, D70, R+0, R+3);
   - key values (ejection fraction, cardiac output, heart rate) and diastolic function by the ASE 2016 criteria;
-  - alerts with the recommended action, the current countermeasure and the recommended one;
+  - **crew alert banner** at the top of the screen: critical and attention alerts from the database rules (filtered by measurement error) and the CUSUM trend alarm, each with why, what to do and its countermeasure; the Heart monitor tab shows the number of alerts. Offline, it falls back to the status computed in the app;
   - full echocardiography table with % change from baseline and weekly trend.
 - **Team:** all subjects ordered by score, with LV mass change, heart rate and response phenotype.
 - **Countermeasures:** what 70 days of bed rest did to each group (Control vs exercise), with confidence intervals, tests and effect sizes, plus findings written from the data.
@@ -124,7 +124,7 @@ Production-like check of the web app: `cd frontend && npm run build && npx vite 
 cd backend
 cp .env.example .env    # optional
 npm start               # http://localhost:8000/api/health
-npm test                # 30 tests (endpoints, errors and statistics)
+npm test                # 31 tests (endpoints, errors, crew alerts and statistics)
 ```
 
 ### Frontend
@@ -188,6 +188,7 @@ Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGE
 ## Changelog
 
 ### v5: bone density
+- **Crew alerts:** an alert banner at the top of the Heart monitor tells the astronaut what is at risk, why and what to do, with the countermeasure (`frontend/src/ui/components/AlertBanner.jsx`, `domain/alerts.js`, `data/alerts.js`). It uses the alerts of `/api/subjects/:code`, which now also return structured fields for the English text (`rule_id`, `metric_name_en`, `pct_change`; the trend adds `since_timepoint` and `sigma_pct`). New tour step and 1 test (31 in total).
 - **AI use declared:** the prompts of each part of the team are in `docs/prompts/` (`PROMPTS_DATA_BACKEND.md`, `PROMPTS_EARLY_WARNING.md`, `PROMPTS_FRONTEND.md`) and summarized in the final report, section "Use of AI Tools".
 - **Space Apps compliance:** the page icon is now an original heart-and-orbit design (`frontend/public/orbit-care-icon.svg`, `.png`, `favicon.ico`, published under new names so browsers drop the cached icon); the earlier NASA-logo icon was removed because NASA branding is not allowed. The final report names the challenge and has a shorter abstract (under 200 words), a "What is new" section and the design inspiration.
 - **Final report** in computer-science paper format: [`docs/FINAL_REPORT.md`](docs/FINAL_REPORT.md), with the architecture diagram and the bone-loss chart in `docs/report/`.

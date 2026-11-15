@@ -190,10 +190,17 @@ The code is about 1,900 lines of backend and 2,400 lines of front end. The backe
 
 Screens:
 
-1. **Heart monitor:** interactive heart by region, findings, % change timeline, health tips, echo table.
+1. **Heart monitor:** a crew alert banner at the top, interactive heart by region, findings, % change timeline, health tips, echo table.
 2. **Countermeasures:** group bars with Welch p and Hedges' g vs Control, crew table.
 3. **Daily check-in:** mood, stress, sleep and symptoms with instant guidance, week and badges.
 4. **Bone density:** diverging bars of loss by region with 95 % CI and the ±LSC band, key structures, subject timeline.
+
+**Crew alerts.** The challenge asks that astronauts can act on their own health, so the first thing on the Heart monitor is an alert banner.
+- It reads the subject's alerts from `/api/subjects/:id`: the alert rules of the database, filtered by measurement error, plus the CUSUM trend alarm.
+- It shows how many alerts are critical or need attention, and the most urgent one with its action. **See all** lists each alert with why it fired, what to do and its countermeasure.
+- Critical alerts are announced to screen readers and pulse briefly; **Got it** marks them as seen. The Heart monitor tab shows the number of alerts on every screen.
+- The database stores the alert texts in Spanish, so the API also returns structured fields (rule, metric name in English, % change, start of the trend) and the app writes the English text (`domain/alerts.js`).
+- If the API does not answer, the banner uses the status computed in the app and says so.
 
 Each screen has a guided tour that highlights its real elements. Pulse and SpO₂ marked LIVE SIM are simulated. Missing echo values are completed from the same database and shown in italics.
 
@@ -203,7 +210,7 @@ Each screen has a guided tour that highlights its real elements. Pulse and SpO�
 - If the API does not answer in 5 s, the app falls back to the bundled CSV files.
 
 **Testing.**
-- 30 automated tests (`node --test`): 22 endpoint tests (contracts, errors, robustness, bone) and 8 tests of the statistics module against reference values.
+- 31 automated tests (`node --test`): 23 endpoint tests (contracts, errors, robustness, bone, crew alerts) and 8 tests of the statistics module against reference values.
 - The front end passes ESLint.
 - It was checked with headless-browser screenshots on desktop and mobile, locally and in production.
 
@@ -265,7 +272,7 @@ Across 51 subjects with labeled phases (27 UTMB Campaign 3, 24 MEDES), the hip r
 Full table: [`BONE_DENSITY.md`](BONE_DENSITY.md).
 
 ### 7.6 Software verification
-- 30/30 tests pass.
+- 31/31 tests pass.
 - Database integrity and foreign-key checks report 0 errors.
 - Front-end CSV and API data agree on 3,329 of 3,331 compared values. The 2 differences are EF averaged per analyst in the database.
 - Production on Vercel serves every endpoint with no page errors.
@@ -295,7 +302,7 @@ Future work:
 
 - Validate the score on an independent cohort or on spaceflight data.
 - Medical review of the heuristic thresholds, region weights and score bands.
-- Show more of the API in the web app: score by region, predictors, phenotypes and the early-warning model.
+- Show more of the API in the web app: score by region, predictors and phenotypes (crew alerts and the trend alarm are already shown).
 - Add a write path to store daily check-ins, and authentication with crew and flight-surgeon roles.
 - Model bone recovery after bed rest from the 6-month and 1-year follow-up scans.
 
@@ -357,7 +364,7 @@ All endpoints are `GET` and return JSON. Live at [health-monitor-for-astronauts.
 
 ```bash
 cd backend && npm start     # API on :8000 (Node.js >= 22.13)
-cd backend && npm test      # 30 tests
+cd backend && npm test      # 31 tests
 cd frontend && npm install && npm run dev   # web app on :5173
 ```
 

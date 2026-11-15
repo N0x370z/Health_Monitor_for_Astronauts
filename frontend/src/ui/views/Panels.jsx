@@ -1,4 +1,4 @@
-// Drawer de sistema, modal de alerta y modal de reporte a la Tierra.
+// Drawer de sistema y modal de reporte a la Tierra (las alertas están en ui/components/AlertBanner.jsx).
 import { useEffect, useState } from "react";
 import { Icon, Dot, Evidence, Sparkline } from "../components/ui.jsx";
 import Ecg from "../components/Ecg.jsx";

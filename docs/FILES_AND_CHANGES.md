@@ -23,7 +23,7 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 │   ├── src/routes/bone.js        # /api/bone, /api/bone/subjects, /api/bone/subjects/:code
 │   ├── src/routes/study.js       # CFT70 study, effects, countermeasures, /api/analytics/*
 │   ├── src/routes/knowledge.js   # alerts, cardiovascular problems, reference ranges
-│   ├── test/api.test.js          # 22 endpoint tests (node --test)
+│   ├── test/api.test.js          # 23 endpoint tests (node --test)
 │   └── test/stats.test.js        # 8 tests of the statistics module
 ├── frontend/                     # ORBIT CARE (React + Vite) in layers: src/app, src/ui, src/domain, src/data; api/index.js runs the backend on Vercel; see frontend/README.md
 ├── data/
@@ -50,6 +50,7 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 | Added tables | `bone_campaign` (4), `bone_subject` (74), `bone_region` (11), `bone_parameter` (4), `bone_measurement` (19,727), view `v_bone_visit` |
 | Added sources | `LSDA_MR035G`, `SRC_SPECTOR_2009`, `SRC_LANG_2004`, `SRC_KANIS_1994`, `SRC_ISCD_2013`, `SRC_GLUER_1995`, `SRC_BAIM_2005` |
 | Added code | `backend/src/services/bone.js`, `backend/src/routes/bone.js`, 2 tests |
+| Crew alerts | Frontend: `ui/components/AlertBanner.jsx` (banner and tab counter), `domain/alerts.js` (English text from the rule, metric and % change; offline fallback), `data/alerts.js` (reads `/api/subjects/:id`); new tour step. Backend: `assessment.js` adds `metric_name_en` to alerts, `rule_id`, `metric_name_en`, `value`, `unit`, `pct_change` to alert recommendations, and `since_timepoint`, `sigma_pct` to the trend; 1 test |
 | Added docs | `docs/BONE_DENSITY.md`; bone sections in `README.md`, `data/README.md`, `DATA_SOURCES.md`, `DATA_METHODOLOGY.md`, `GLOSSARY.md` |
 | Updated | `data/schema.sql` (bone tables), `data/queries.sql` (queries 9 and 10) |
 | Not imported | Personal fields, absolute dates, body composition, Ward's triangle, single vertebrae, empty subregion files, screening scans |
