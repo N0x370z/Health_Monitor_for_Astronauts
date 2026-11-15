@@ -73,6 +73,14 @@ NASA LSDA result sentences were linked to each cardiovascular problem by keyword
 | Statistics module | Checked against t tables and an independent numerical integration |
 | Backend tests | 25/25 pass (`backend/test/api.test.js`, `backend/test/stats.test.js`) |
 
+### Phase 8. Bone densitometry (v5, NASA MR035G DXA)
+1. **Review of the 1,064 files:** 11 export formats (hip regional analysis and summaries, spine, forearm, heel, whole body, body composition, subregions, ReadMe). The same scan appears in up to three files.
+2. **Import** with a one-off script outside the repository: generic reading of the `<REGION>_BMD/BMC` columns and of the T/Z summary columns, de-duplication by subject, region, side, parameter and scan ID (38,493 → 19,727), and visit coding from the bed rest phase and day (follow-up files: 6 months, 1 year).
+3. **Kept only what is needed to assess bone loss:** 11 regions and 4 parameters. Personal fields (one file had a last-name column; birth dates, ethnicity) and absolute dates were not imported. Scans inside the 2006 scanner recalibration window are flagged.
+4. **Extraction of the relevant parameters and structures:** precision and LSC per region from the repeated PRE scans, and the PRE → end-of-bed-rest change per region. Results and ranking in [`BONE_DENSITY.md`](BONE_DENSITY.md). Hip (total, intertrochanteric, trochanter), pelvis, heel and femoral neck are the key regions; forearm and arms are controls.
+5. **Backend:** `backend/src/services/bone.js` and `/api/bone…` endpoints; 2 new tests.
+6. **Validation:** foreign keys and integrity 0 errors; `schema.sql` builds the same objects as the database; the backend results match an independent SQL query (`queries.sql` #10).
+
 ## 4. Build process and scripts
 
 The database was built once with a build script kept **outside the repository**. As of 2026-11-14, the database file itself is the source of truth:
@@ -97,6 +105,7 @@ The database was built once with a build script kept **outside the repository**.
 | 2026-11-14 | v1: 41 metrics covering NASA's 5 spaceflight hazards |
 | 2026-11-14 | v2: scope reduced to temperature, pressure, cardiovascular, SpO₂ and radiation. Database file versioned. Citations verified |
 | 2026-11-14 | v3: cardiovascular focus. CFT70/BRSMCF echocardiography imported. Knowledge base of problems, rules and countermeasures added. Crew data recalibrated with CFT70. Cabin temperature and pressure removed. Python scripts removed. Node.js backend (no framework) and React frontend added |
+| 2026-11-15 | **v5: bone densitometry.** NASA MR035G DXA imported into `bone_*` tables (74 subjects, 19,727 measurements, 11 regions, 4 parameters). Precision and LSC per region; ranking of the regions with the largest bone loss. 7 sources added. Size 3.6 → 6.6 MB |
 | 2026-11-15 | **Frontend integration.** ORBIT CARE v2 (team branch `v2-frontend`) moved to `frontend/`. In its bundled `echo_3d.csv` the analysts' names were replaced by A1–A3 (same mapping as the database) and RVSP was aligned to RAP 3 mmHg. The app now loads the values from the database through `/api/study/cft70/echo-data` (3,331 values compared with the CSV files: only 2 EF values differ > 2 %, because the database averages EF per analyst). The API runs on Vercel as a function |
 | 2026-11-15 | **v4: real data only and data mining.** Synthetic crew, `study_effect` and non-cardiovascular metrics removed. Derived metrics (cardiac output, Tei, RVSP, average E/e′), heart regions and new guideline ranges added. Backend rebuilt around the CFT70 subjects: cardiac score by region, measurement error filter, ASE diastolic assessment, group statistics, reliability, predictors and phenotypes. Malformed URLs return 400 instead of stopping the server; change analyses reject the baseline. 27 tests |
 

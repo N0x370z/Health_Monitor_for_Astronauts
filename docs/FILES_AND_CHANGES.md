@@ -15,12 +15,14 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 │   ├── src/http.js               # JSON responses, CORS, minimal router
 │   ├── src/services/dataset.js   # loads CFT70 and the knowledge base into memory once
 │   ├── src/services/stats.js     # statistics: t tests, CI, Hedges' g, correlation, ICC/MDC, BH, k-means++
+│   ├── src/services/bone.js      # bone densitometry: bone loss by region vs LSC, ranking, subject timeline
 │   ├── src/services/assessment.js# metric status, cardiac score by region, ASE diastolic, alerts, recommendations
 │   ├── src/services/analytics.js # data mining: group effects, reliability, correlations, predictors, phenotypes
 │   ├── src/routes/subjects.js    # subjects list, subject dashboard, echo table
+│   ├── src/routes/bone.js        # /api/bone, /api/bone/subjects, /api/bone/subjects/:code
 │   ├── src/routes/study.js       # CFT70 study, effects, countermeasures, /api/analytics/*
 │   ├── src/routes/knowledge.js   # alerts, cardiovascular problems, reference ranges
-│   ├── test/api.test.js          # 19 endpoint tests (node --test)
+│   ├── test/api.test.js          # 22 endpoint tests (node --test)
 │   └── test/stats.test.js        # 8 tests of the statistics module
 ├── frontend/                     # ORBIT CARE (React + Vite); api/index.js runs the backend on Vercel; see frontend/README.md
 ├── data/
@@ -34,8 +36,20 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
     ├── DATA_METHODOLOGY.md            # method, validation, change log
     ├── FILES_AND_CHANGES.md           # this file
     ├── GLOSSARY.md                    # terms and abbreviations shown in the app
+    ├── BONE_DENSITY.md                # bone densitometry: import, relevant parameters and structures
     └── PROMPTS.md                     # useful prompts for the project
 ```
+
+## Changes in v5 (2026-11-15): bone densitometry
+
+| Type | Detail |
+|---|---|
+| Added tables | `bone_campaign` (4), `bone_subject` (74), `bone_region` (11), `bone_parameter` (4), `bone_measurement` (19,727), view `v_bone_visit` |
+| Added sources | `LSDA_MR035G`, `SRC_SPECTOR_2009`, `SRC_LANG_2004`, `SRC_KANIS_1994`, `SRC_ISCD_2013`, `SRC_GLUER_1995`, `SRC_BAIM_2005` |
+| Added code | `backend/src/services/bone.js`, `backend/src/routes/bone.js`, 2 tests |
+| Added docs | `docs/BONE_DENSITY.md`; bone sections in `README.md`, `data/README.md`, `DATA_SOURCES.md`, `DATA_METHODOLOGY.md`, `GLOSSARY.md` |
+| Updated | `data/schema.sql` (bone tables), `data/queries.sql` (queries 9 and 10) |
+| Not imported | Personal fields, absolute dates, body composition, Ward's triangle, single vertebrae, empty subregion files, screening scans |
 
 ## Changes in v4 (2026-11-15): real data only and data mining
 

@@ -110,3 +110,24 @@ Terms and abbreviations needed to read the ORBIT CARE web app. Attention / Criti
 | **LIVE SIM** | Value simulated every second in the browser (pulse and SpO₂). The pulse starts from the measured heart rate. Not study data. |
 | **How it works** | Button that opens the mini tutorial of the current screen. |
 | **Replay** | Steps automatically through the study timepoints, from Pre to R+3. |
+
+## 9. Bone density (API and `docs/BONE_DENSITY.md`)
+| Term | Meaning |
+|---|---|
+| **DXA** | Dual-energy X-ray absorptiometry: low-dose X-ray scan that measures bone mineral. |
+| **BMD** | Bone mineral density (g/cm²). The main value to follow. |
+| **BMC** | Bone mineral content (g): grams of mineral in the region. |
+| **T-score** | BMD compared with young adults, in SD. WHO: ≥ −1.0 normal, −1.0 to −2.5 low bone mass, ≤ −2.5 osteoporosis (for postmenopausal women and men 50+). |
+| **Z-score** | BMD compared with people of the same age and sex, in SD. In young adults, ≤ −2.0 is below the expected range. |
+| **Precision (CV %)** | Scanner error, measured from repeated scans of the same person on the same day. |
+| **LSC** | Least significant change = 2.77 × precision. A smaller change cannot be told apart from scanner error. |
+| **Loss / stable / gain** | Change from PRE larger than the LSC downward, within the LSC, or larger than the LSC upward. |
+| **Standardized response** | Mean change divided by its SD. More negative means a larger and more consistent loss. |
+| **Total hip, femoral neck, trochanter, intertrochanteric** | Regions of the upper femur measured in a hip scan. |
+| **Calcaneus** | Heel bone. |
+| **Lumbar spine L1–L4** | The four lower back vertebrae, measured together. |
+| **Forearm 1/3** | Shaft of the radius and ulna at one third of the forearm length. Used here as a control. |
+| **Weight-bearing** | Bone that carries body weight when standing (hip, pelvis, legs, heel, spine). It loses bone without gravity. |
+| **Key / supporting / control region** | Key: best structures to detect bone loss. Supporting: clinical or global reference. Control: non-weight-bearing, should not change. |
+| **PRE, BR_MID, BR_END, R+n, FU_6MO, FU_1Y** | Bone visits: before bed rest, mid bed rest, end of bed rest, n days after, follow-up at 6 months and 1 year. |
+| **UTMB, MEDES** | Bed rest facilities: University of Texas Medical Branch (USA) and the French Institute for Space Medicine and Physiology (Toulouse). |

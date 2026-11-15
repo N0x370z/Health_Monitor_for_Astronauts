@@ -28,6 +28,7 @@ The ORBIT CARE web app shows the heart monitor, countermeasures (with the backen
   - correlations between changes;
   - response phenotypes (k-means++).
 - **Problems and prevention:** the 7 cardiovascular problems of spaceflight, why they happen, what the data shows and how to prevent them.
+- **Bone density (API):** DXA of 74 bed-rest subjects (NASA MR035G). Bone loss by skeletal region against the scanner's least significant change, ranking of the most affected structures, and each subject's timeline.
 
 ## Tech Stack
 
@@ -63,7 +64,7 @@ The database lives in the same repository (`data/`). The backend reads it direct
 
 ## Data
 
-- **Database:** `data/health_monitor.sqlite` (3.6 MB). Tables are described in [`data/README.md`](data/README.md).
+- **Database:** `data/health_monitor.sqlite` (6.6 MB). Tables are described in [`data/README.md`](data/README.md).
 - **Cardiovascular problems tracked:**
   - orthostatic intolerance
   - cardiac atrophy
@@ -75,10 +76,12 @@ The database lives in the same repository (`data/`). The backend reads it direct
 - **Real data:**
   - NASA CFT70 / BRSMCF echocardiography: 37 subjects, 7 timepoints, 4 groups, 7,890 measured values plus 863 derived with clinical formulas (cardiac output, Tei index, RV systolic pressure, average E/e′).
   - NASA Life Sciences Data Archive evidence: 829 datasets, 158 experiments, 237 findings.
+  - NASA MR035G bone densitometry (DXA): 74 bed-rest subjects (UTMB Campaign 3 and 1, AG pilot, MEDES), 11 skeletal regions, 19,727 measurements. Details: [`docs/BONE_DENSITY.md`](docs/BONE_DENSITY.md).
 - **Monitoring, scoring and data mining:** [`docs/CARDIOVASCULAR_MONITORING.md`](docs/CARDIOVASCULAR_MONITORING.md)
 - **Sources and citations:** [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md)
 - **Method and work record:** [`docs/DATA_METHODOLOGY.md`](docs/DATA_METHODOLOGY.md)
 - **Glossary (terms and abbreviations used in the app):** [`docs/GLOSSARY.md`](docs/GLOSSARY.md)
+- **Bone density data and analysis:** [`docs/BONE_DENSITY.md`](docs/BONE_DENSITY.md)
 
 ### Key findings from the data
 - **Exercise protects the heart.** Every protocol lost less LV mass than Control. Exercise B vs Control: Hedges' g 1.21, p = 0.011. The differences between protocols are not significant.
@@ -86,6 +89,7 @@ The database lives in the same repository (`data/`). The backend reads it direct
 - **LVOT VTI is the strongest single signal** (Doppler 2D, g = 2.18).
 - **The end-of-mission echo predicts trouble on return.** A lower E/A, LVOT VTI or LV mass at day 70 predicts a larger heart-rate jump on getting up (r = −0.47 to −0.61).
 - **Measurement error matters.** LV mass changes under ~6.5 % cannot be told apart from analyst reading error, so they do not raise alerts.
+- **Bone is lost where it carries weight.** After about 60 days of bed rest: total hip −2.8 %, intertrochanteric −3.0 %, trochanter −2.6 %, pelvis −2.1 %, heel −1.8 % (all p < 0.05). The forearm and arms do not change. The total hip is the most reliable structure to follow: 63 % of subjects lost more than the scanner's least significant change (2.3 %).
 
 ## Getting Started
 
@@ -112,7 +116,7 @@ Production-like check of the web app: `cd frontend && npm run build && npx vite 
 cd backend
 cp .env.example .env    # optional
 npm start               # http://localhost:8000/api/health
-npm test                # 28 tests (endpoints, errors and statistics)
+npm test                # 30 tests (endpoints, errors and statistics)
 ```
 
 ### Frontend
@@ -155,6 +159,8 @@ All endpoints are `GET` and return JSON. Timepoints accept `Pre, D7, D21, D30, D
 | `/api/analytics/correlations?timepoint=` | Correlations between changes (Pearson, Spearman, Benjamini-Hochberg) |
 | `/api/analytics/predictors` | Early predictors: D7 → D70 losses, D70 → heart-rate rise at R+0 |
 | `/api/analytics/phenotypes?k=2` | Response phenotypes (k-means++) and deconditioning index |
+| `/api/bone` | Bone density: campaigns, parameters, regions with bone loss (CI, p, standardized response, % beyond the LSC) and the ranking of the most affected regions |
+| `/api/bone/subjects?campaign=` · `/api/bone/subjects/:code` | Bone subjects; one subject's DXA timeline by region with % change from PRE and status (loss / stable / gain) |
 | `/api/problems` · `/api/problems/:code` | Cardiovascular problems with countermeasures, rules and NASA evidence |
 | `/api/reference` | Metrics, reference ranges, change thresholds, heart regions, countermeasures, sources |
 
@@ -172,7 +178,13 @@ Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGE
 
 ## Changelog
 
-### v4: real data only and data mining (current)
+### v5: bone density
+- Ordered the NASA MR035G DXA files (1,064 files, 4 bed rest campaigns) into one set of tables in the project database: `bone_campaign`, `bone_subject`, `bone_region`, `bone_parameter`, `bone_measurement` and the view `v_bone_visit`.
+- Kept only what is needed to assess bone loss (BMD, BMC, T-score, Z-score at 11 regions). Removed personal fields, absolute dates, body composition and duplicated scans (38,493 → 19,727 rows).
+- Extracted the most relevant parameters and structures: the precision and least significant change of every region come from the repeated scans, and the regions are ranked by the bone loss measured in the data. Key regions: total hip, intertrochanteric region, trochanter, pelvis, heel and femoral neck. Controls: forearm and arms.
+- New endpoints `/api/bone…`, 2 tests (30 in total), 7 verified sources and [`docs/BONE_DENSITY.md`](docs/BONE_DENSITY.md).
+
+### v4: real data only and data mining
 
 **Database**
 - Removed the synthetic crew (16 crew members, 4 missions, 24 h vital signs and history). The monitor now follows the real CFT70 subjects.

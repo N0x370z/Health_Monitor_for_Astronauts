@@ -35,6 +35,11 @@ Prompts que funcionaron bien al construir este proyecto con un asistente de IA, 
 - *"Valida el puntaje: todos deben salir normales antes del reposo, y al día 70 Control debe quedar peor que los grupos con ejercicio. Dime el AUC y aclara si la validación es independiente o no."*
 - *"Comprueba el módulo de estadística contra valores de tablas o una implementación independiente antes de usarlo."*
 
+## 5b. Bone density
+- *"Revisa los archivos de densidad ósea de varios sujetos y estructuras óseas, extrae los parámetros más relevantes en las estructuras más significativas para evaluar una degradación ósea y ordénalo en una sola base de datos con los parámetros necesarios."*
+- *"Quita los datos personales y lo que no sirva (nombres, fechas de nacimiento, fechas absolutas, escaneos duplicados) y documenta qué se quitó."*
+- *"Calcula el error del densitómetro con los escaneos repetidos y no cuentes como pérdida un cambio menor al cambio mínimo significativo."*
+
 ## 6. Frontend
 - *"Crea un frontend con React y Recharts, con un diseño limpio y claro: vista general de la tripulación por riesgo, detalle de cada tripulante con signos vitales de 24 h, alertas con acción recomendada y tendencia de ecocardiogramas comparada con el estudio de referencia."*
 - *"Toma capturas de la interfaz con un navegador sin interfaz gráfica y corrige lo que se vea mal (gráficas, espacios, textos que se enciman)."*

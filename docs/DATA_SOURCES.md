@@ -40,6 +40,20 @@ Every source used to build `data/health_monitor.sqlite`. The same list, with the
 
 ---
 
+## 2b. Real bone densitometry data: NASA MR035G (DXA)
+
+| Item | Detail |
+|---|---|
+| Archive | NASA Life Sciences Data Archive, Bone Densitometry Assessment **MR035G** (`LSDA_MR035G`). Example dataset page: [UTMB Bedrest Campaign 3 DXA Heel](https://nlsp.nasa.gov/explore/data/details/a9f04e77-8e27-5f28-ac0b-433a1bd602a4?dataType=DATASETS) |
+| Files | 1,064 Hologic DXA exports: UTMB bed rest Campaign 3 (cohorts C3A–C3H) and Campaign 1, UTMB artificial gravity pilot, MEDES bed rest |
+| Study reference | Spector ER, Smith SM, Sibonga JD. Skeletal effects of long-duration head-down bed rest. *Aviat Space Environ Med.* 2009;80(5):A23–A28. https://doi.org/10.3357/asem.br02.2009 |
+| Imported | 74 subjects, 11 regions, BMD / BMC / T-score / Z-score, 19,727 unique measurements |
+| Not imported | Last names, birth dates, ethnicity, menopause year, scanner keys, absolute dates, body composition, Ward's triangle, single vertebrae, empty subregion files, screening scans |
+
+Details of the import and the analysis: [`BONE_DENSITY.md`](BONE_DENSITY.md).
+
+---
+
 ## 3. NASA Life Sciences Data Archive (evidence)
 
 | Item | Detail |
@@ -81,6 +95,17 @@ LSDA studies used directly:
 | `SRC_NASA_ISS_DOSE` | NASA. *Space Faring: The Radiation Challenge.* https://www.nasa.gov/wp-content/uploads/2017/04/radiationchallenge.pdf | ISS dose (80–160 mSv per 6 months) |
 | `SRC_UNSCEAR` | UNSCEAR 2008 Report, Vol. I. https://www.unscear.org/unscear/en/publications/2008_1.html | Natural background (2.4 mSv/year) |
 
+### Bone density
+
+| Source ID | Reference | Used for |
+|---|---|---|
+| `SRC_SPECTOR_2009` | Spector ER, Smith SM, Sibonga JD. Skeletal effects of long-duration head-down bed rest. *Aviat Space Environ Med.* 2009;80(5):A23–A28. https://doi.org/10.3357/asem.br02.2009 | Bed rest bone loss at weight-bearing sites; campaign design |
+| `SRC_LANG_2004` | Lang T, LeBlanc A, Evans H, Lu Y, et al. Cortical and trabecular bone mineral loss from the spine and hip in long-duration spaceflight. *J Bone Miner Res.* 2004;19(6):1006–1012. https://doi.org/10.1359/jbmr.040307 | Spaceflight loss at the hip (trochanter) |
+| `SRC_KANIS_1994` | Kanis JA. Assessment of fracture risk and its application to screening for postmenopausal osteoporosis: synopsis of a WHO report. *Osteoporos Int.* 1994;4(6):368–381. https://doi.org/10.1007/BF01622200 | WHO T-score categories |
+| `SRC_ISCD_2013` | Schousboe JT, Shepherd JA, Bilezikian JP, Baim S. Executive summary of the 2013 ISCD Position Development Conference on bone densitometry. *J Clin Densitom.* 2013;16(4):455–466. https://doi.org/10.1016/j.jocd.2013.08.004 | Sites to measure; Z-score in young adults |
+| `SRC_GLUER_1995` | Glüer CC, Blake G, Lu Y, Blunt BA, et al. Accurate assessment of precision errors: how to measure the reproducibility of bone densitometry techniques. *Osteoporos Int.* 1995;5(4):262–270. https://doi.org/10.1007/BF01774016 | Precision (RMS-SD) from repeated scans |
+| `SRC_BAIM_2005` | Baim S, Wilson CR, Lewiecki EM, Luckey MM, et al. Precision assessment and radiation safety for DXA: ISCD position paper. *J Clin Densitom.* 2005;8(4):371–378. https://doi.org/10.1385/JCD:8:4:371 | Least significant change = 2.77 × precision |
+
 ### Statistical methods
 
 | Source ID | Reference | Used for |
@@ -97,4 +122,5 @@ Standard methods without a stored source: Welch's t-test, Pearson and Spearman c
 - All DOIs were checked in Crossref and PubMed on 14 November 2026, including the four added in this version: Cromwell 2018, Lang 2015, Nagueh 2016 and Perhonen 2001.
 - The NASA-STD-3001 limits were read in the text of the standard.
 - The five DOIs added in v4 (Rudski 2010, Shrout and Fleiss 1979, Weir 2005, Bland and Altman 1986, Hedges 1981) were checked in Crossref on 15 November 2026.
+- The six bone references added in v5 (Spector 2009, Lang 2004, Kanis 1994, Schousboe 2013, Glüer 1995, Baim 2005) were checked in Crossref on 15 November 2026.
 - The CFT70 group results computed by the backend match an independent SQL computation (`data/queries.sql` #2) and the analysis in `docs/CARDIOVASCULAR_MONITORING.md`.
