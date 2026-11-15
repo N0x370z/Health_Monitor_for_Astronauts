@@ -38,6 +38,9 @@ Prompts que funcionaron bien al construir este proyecto con un asistente de IA, 
 ## 6. Frontend
 - *"Crea un frontend con React y Recharts, con un diseño limpio y claro: vista general de la tripulación por riesgo, detalle de cada tripulante con signos vitales de 24 h, alertas con acción recomendada y tendencia de ecocardiogramas comparada con el estudio de referencia."*
 - *"Toma capturas de la interfaz con un navegador sin interfaz gráfica y corrige lo que se vea mal (gráficas, espacios, textos que se enciman)."*
+- *"Revisa si la rama del frontend de mi compañero necesita merge, intégrala sin perder su historial y corrige los errores que encuentres (datos personales, fórmulas distintas a la base, documentación desactualizada)."*
+- *"Conecta el frontend con el backend: que los datos salgan de la base vía API, con respaldo offline si la API no responde, y verifica que los valores coincidan con los archivos originales."*
+- *"Prepara el despliegue en Vercel con la API en el mismo dominio y comprueba en producción que cada ruta responda."*
 
 ## 7. Documentación
 - *"Documenta de manera formal qué se hizo: objetivo, método por fases, decisiones, validación, limitaciones y bitácora de cambios."*

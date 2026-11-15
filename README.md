@@ -13,6 +13,8 @@ Our goal is to **detect these problems early and prevent them**. The monitor fol
 
 ## Features
 
+The ORBIT CARE web app shows the heart monitor, countermeasures (with the backend statistics) and the daily check-in. Everything below is available through the API; the screens not yet in the web app (team, data mining, problems) can be added from the same endpoints.
+
 - **Heart monitor (per subject):**
   - cardiac score 0–100 by region (left ventricle, aortic outflow, rate and timing, mitral valve, right ventricle) at any timepoint (Pre, D7, D21, D30, D70, R+0, R+3);
   - key values (ejection fraction, cardiac output, heart rate) and diastolic function by the ASE 2016 criteria;
@@ -87,7 +89,22 @@ The database lives in the same repository (`data/`). The backend reads it direct
 ## Getting Started
 
 ### Prerequisites
-- Node.js >= 22.13 (includes `node:sqlite`)
+- Node.js >= 22.13 (includes `node:sqlite`). Check with `node -v`.
+
+### Run everything locally (two terminals)
+```bash
+# Terminal 1: API on http://localhost:8000
+cd backend
+npm start
+
+# Terminal 2: web app on http://localhost:5173
+cd frontend
+npm install        # first time only
+npm run dev
+```
+Open http://localhost:5173. The header must say **"Live from the CFT70 database (API)"**; if it says **"Offline"**, the backend is not running and the app is using the bundled CSV files. Stop each one with `Ctrl+C`.
+
+Production-like check of the web app: `cd frontend && npm run build && npx vite preview` (http://localhost:4173, it does not proxy `/api`, so it runs in offline mode).
 
 ### Backend
 ```bash
