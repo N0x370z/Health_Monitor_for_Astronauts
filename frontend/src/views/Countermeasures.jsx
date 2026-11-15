@@ -1,14 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Dot, Evidence, Icon } from "../components/ui.jsx";
-import { ECHO, TREATMENTS, TIMEPOINTS } from "../data/echo.js";
+import { DB_METRIC, ECHO, TREATMENT_BY_GROUP, TREATMENTS, TIMEPOINTS, apiJson } from "../data/echo.js";
 import { HM, groupChange, heartState, fmt } from "../sim/heart.js";
 import { STATUS_LABEL } from "../data/config.js";
 
 const KEYS = ["lvMass", "edv", "sv", "vti", "hr"];
 const COLORS = { Control: "#f43f5e", "Exercise A": "#22d3ee", "Exercise B": "#4ade80", Flywheel: "#a78bfa" };
 
+/** Prueba t de Welch y g de Hedges de cada grupo vs Control, calculadas por el backend. */
+function useGroupStats(k, tpKey) {
+  const [stats, setStats] = useState({});
+  useEffect(() => {
+    let alive = true;
+    const label = TIMEPOINTS.find((t) => t.key === tpKey).label;
+    apiJson(`/api/study/cft70/effects?metric=${DB_METRIC[k]}&timepoint=${encodeURIComponent(label)}`).then((rows) => {
+      if (alive) setStats(Object.fromEntries((rows ?? []).map((r) => [TREATMENT_BY_GROUP[r.group_code], r.vs_control])));
+    });
+    return () => { alive = false; };
+  }, [k, tpKey]);
+  return stats;
+}
+
+const fmtP = (p) => (p < 0.001 ? "p<0.001" : `p=${p.toFixed(3)}`);
+
 function GroupBars({ k, tpKey }) {
   const g = groupChange(k, tpKey);
+  const stats = useGroupStats(k, tpKey);
   const max = Math.max(10, ...TREATMENTS.map((t) => Math.abs(g[t].mean ?? 0)));
   return (
     <Card title={HM[k].label} sub={`${TIMEPOINTS.find((t) => t.key === tpKey).label} vs Pre`}>
@@ -23,6 +40,12 @@ function GroupBars({ k, tpKey }) {
               <i style={{ width: `${w}%`, left: m < 0 ? `${50 - w}%` : "50%", background: COLORS[t] }} />
             </div>
             <b className="mono">{m == null ? "—" : `${m > 0 ? "+" : ""}${m.toFixed(1)}%`}</b>
+            {stats[t]?.p != null && (
+              <small className="mono" style={{ gridColumn: "1 / -1", color: stats[t].p < 0.05 ? "var(--ok)" : "var(--text-2)" }}
+                title="Welch t-test and Hedges' g vs Control (backend statistics)">
+                vs Control: {fmtP(stats[t].p)} · g={stats[t].hedges_g}
+              </small>
+            )}
           </div>
         );
       })}

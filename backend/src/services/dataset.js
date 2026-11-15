@@ -138,3 +138,28 @@ export function metricInfo(code) {
   const m = metrics.get(code);
   return { metric_code: code, name_es: m?.name_es ?? code, unit: m?.unit ?? null };
 }
+
+/**
+ * Todos los valores del eco por sujeto y momento (3D promediado entre analistas), en una sola respuesta.
+ * Es lo que carga el frontend ORBIT CARE al iniciar.
+ */
+let echoCache = null;
+export function echoData() {
+  echoCache ??= {
+    study: 'CFT70',
+    timepoints: timepoints.map((t) => t.short_label),
+    subjects: subjects.map((s) => {
+      const byTp = values.get(s.subject_code) ?? new Map();
+      return {
+        nasa_id: s.subject_code.replace(/^S/, ''),
+        group_code: s.group_code,
+        in_subset_7: Boolean(s.in_subset_7),
+        values: Object.fromEntries(timepoints.filter((t) => byTp.has(t.timepoint_code)).map((t) => [
+          t.short_label,
+          Object.fromEntries([...byTp.get(t.timepoint_code)].map(([m, v]) => [m, Math.round(v * 1e4) / 1e4])),
+        ])),
+      };
+    }),
+  };
+  return echoCache;
+}

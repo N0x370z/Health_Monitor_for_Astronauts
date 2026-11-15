@@ -153,7 +153,7 @@ export default function App() {
             <button className={`random-btn ${spin ? "spin" : ""}`} onClick={randomSample} title="Load a random subject and timepoint from the CFT70 database">
               <Icon name="dice" size={22} /><span>Random data</span>
             </button>
-            <small aria-live="polite">{lastRandom ? `Loaded: ${lastRandom}` : "From the CFT70 echo database"}</small>
+            <small aria-live="polite">{lastRandom ? `Loaded: ${lastRandom}` : ECHO.source === "api" ? "Live from the CFT70 database (API)" : "Offline: bundled CFT70 echo files"}</small>
           </div>
         </div>
 

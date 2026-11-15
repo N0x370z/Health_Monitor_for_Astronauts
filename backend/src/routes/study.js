@@ -2,7 +2,7 @@ import { all } from '../db.js';
 import {
   correlations, countermeasureSummary, effects, phenotypes, predictors, reliability,
 } from '../services/analytics.js';
-import { BASELINE, findMetric, findTimepoint, groups, metricInfo, study, subjects, timepoints } from '../services/dataset.js';
+import { BASELINE, echoData, findMetric, findTimepoint, groups, metricInfo, study, subjects, timepoints } from '../services/dataset.js';
 import { HttpError } from '../http.js';
 
 // Los análisis de cambio no tienen sentido en la línea base (todo cambio es 0 %).
@@ -22,6 +22,9 @@ export function register(router) {
     key_metrics: KEY_METRICS.map((m) => ({ ...metricInfo(m), problem_code: findMetric(m).problem_code })),
     data_quality: all('SELECT quality_flag, COUNT(*) AS n FROM study_echo_measurement GROUP BY quality_flag'),
   }));
+
+  // Todos los valores del eco (lo que carga el frontend al iniciar).
+  router.get('/api/study/cft70/echo-data', () => echoData());
 
   // Cambio medio (%) vs antes del reposo por grupo y momento, con IC 95 %, prueba t y g de Hedges vs Control.
   router.get('/api/study/cft70/effects', (_, query) => {

@@ -133,20 +133,83 @@ function build() {
 }
 
 // Métricas derivadas (fórmulas estándar de ecocardiografía)
+// Si el valor ya viene calculado de la base (API), se respeta; si no, se calcula aquí.
 function derive(m) {
   m.hr = m.hrL ?? m.hrR ?? null;
-  m.fs = m.lvidd && m.lvids ? ((m.lvidd - m.lvids) / m.lvidd) * 100 : null;
-  m.sv = m.edv && m.esv ? m.edv - m.esv : null;
-  m.ef = m.sv && m.edv ? (m.sv / m.edv) * 100 : null;
-  m.co = m.sv && m.hr ? (m.sv * m.hr) / 1000 : null;
-  m.ea = m.mE && m.mA ? m.mE / m.mA : null;
+  m.fs ??= m.lvidd && m.lvids ? ((m.lvidd - m.lvids) / m.lvidd) * 100 : null;
+  m.sv ??= m.edv && m.esv ? m.edv - m.esv : null;
+  m.ef ??= m.sv && m.edv ? (m.sv / m.edv) * 100 : null;
+  m.co ??= m.sv && m.hr ? (m.sv * m.hr) / 1000 : null;
+  m.ea ??= m.mE && m.mA ? m.mE / m.mA : null;
   const ePrime = mean([m.latE, m.sepE].filter((x) => x != null));
-  m.ee = m.mE && ePrime ? m.mE / ePrime : null;
-  m.tei = m.ict && m.ivrt && m.et ? (m.ict + m.ivrt) / m.et : null;
-  m.rvsp = m.tr ? 4 * (m.tr / 100) ** 2 + 3 : null; // RAP 3 mmHg (Rudski 2010), igual que la base
+  m.ee ??= m.mE && ePrime ? m.mE / ePrime : null;
+  m.tei ??= m.ict && m.ivrt && m.et ? (m.ict + m.ivrt) / m.et : null;
+  m.rvsp ??= m.tr ? 4 * (m.tr / 100) ** 2 + 3 : null; // RAP 3 mmHg (Rudski 2010), igual que la base
 }
 
-export const ECHO = build();
-export const SUBJECT_IDS = Object.keys(ECHO.subjects).sort((a, b) =>
-  (ECHO.subjects[b].crew - ECHO.subjects[a].crew) || a.localeCompare(b));
+// Datos activos. Arranca con los CSV empaquetados (respaldo offline) y main.jsx los reemplaza
+// con los de la base (API del backend) antes de dibujar la app, si la API responde.
+export const ECHO = { ...build(), source: "csv" };
+export const SUBJECT_IDS = [];
+function sortSubjects() {
+  SUBJECT_IDS.splice(0, SUBJECT_IDS.length, ...Object.keys(ECHO.subjects).sort((a, b) =>
+    (ECHO.subjects[b].crew - ECHO.subjects[a].crew) || a.localeCompare(b)));
+}
+sortSubjects();
 export const TREATMENTS = ["Control", "Exercise A", "Exercise B", "Flywheel"];
+
+// ── Conexión con el backend (data/health_monitor.sqlite) ──
+export const API_BASE = import.meta.env.VITE_API_URL ?? "";
+export const TREATMENT_BY_GROUP = { CONTROL: "Control", EXERCISE_A: "Exercise A", EXERCISE_B: "Exercise B", FLYWHEEL: "Flywheel", UNASSIGNED: "Unassigned" };
+const TP_BY_LABEL = Object.fromEntries(TIMEPOINTS.map((t) => [t.label, t.key]));
+// clave del frontend → metric_code de la base
+export const DB_METRIC = {
+  lvidd: "lvid_d", lvids: "lvid_s", pvAt: "pv_at", pvEt: "pv_et", mE: "mitral_e", mA: "mitral_a", mDt: "mitral_dt",
+  ict: "ivct", et: "lv_et", ivrt: "ivrt", tE: "tricuspid_e", tA: "tricuspid_a", tr: "tricuspid_regurgitation",
+  rvS: "s_prime_tricuspid", hrR: "hr_tdi_right", sepS: "s_prime_septal", sepE: "e_prime_septal", latS: "s_prime_lateral",
+  latE: "e_prime_lateral", hrL: "hr_tdi_left", vp: "cmm_vp", vti: "lvot_vti", lvMass: "lv_mass", edv: "lvedv", esv: "lvesv",
+  sv: "stroke_volume", ef: "lvef", co: "cardiac_output", fs: "fractional_shortening", ea: "e_a_ratio", ee: "e_e_prime_avg",
+  tei: "tei_index", rvsp: "rvsp",
+};
+
+export function fromApi(data) {
+  const subjects = {};
+  for (const s of data.subjects) {
+    const tp = {};
+    for (const [label, vals] of Object.entries(s.values)) {
+      const key = TP_BY_LABEL[label];
+      if (!key) continue;
+      const m = Object.fromEntries(Object.entries(DB_METRIC).map(([k, code]) => [k, vals[code] ?? null]));
+      derive(m);
+      tp[key] = m;
+    }
+    subjects[s.nasa_id] = { id: s.nasa_id, treatment: TREATMENT_BY_GROUP[s.group_code] ?? "Unassigned", crew: s.in_subset_7, tp };
+  }
+  return { subjects, crewIds: data.subjects.filter((s) => s.in_subset_7).map((s) => s.nasa_id) };
+}
+
+/** Carga los datos de la base vía API. Si no responde en 5 s, se quedan los CSV empaquetados. */
+export async function loadEcho() {
+  try {
+    const res = await fetch(`${API_BASE}/api/study/cft70/echo-data`, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = fromApi(await res.json());
+    if (!Object.keys(data.subjects).length) throw new Error("empty");
+    Object.assign(ECHO, data, { source: "api" });
+    sortSubjects();
+  } catch (err) {
+    console.warn("ORBIT CARE: API no disponible, usando los CSV empaquetados.", err.message);
+  }
+  return ECHO.source;
+}
+
+/** GET a la API (solo si los datos vienen de la base). Devuelve null si no hay API o si falla. */
+export async function apiJson(path) {
+  if (ECHO.source !== "api") return null;
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { signal: AbortSignal.timeout(5000) });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}

@@ -5,6 +5,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
   { ignores: ['dist'] },
+  // Archivos que corren en Node (configuración de Vite y función de Vercel)
+  { files: ['vite.config.js', 'api/**/*.js'], languageOptions: { globals: globals.node } },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {

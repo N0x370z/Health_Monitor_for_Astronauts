@@ -183,3 +183,13 @@ test('análisis de cambio: Pre es línea base y se rechaza', async () => {
     assert.equal((await getJson(`${p}?timepoint=R%2B0`)).status, 200, p);
   }
 });
+
+test('echo-data: todos los valores del eco para el frontend', async () => {
+  const { status, body } = await getJson('/api/study/cft70/echo-data');
+  assert.equal(status, 200);
+  assert.equal(body.subjects.length, 38);
+  assert.equal(body.subjects.filter((s) => s.in_subset_7).length, 7);
+  const s = body.subjects.find((x) => x.nasa_id === '6546');
+  near(s.values.D70.lvedv, 92.5, 0.1);
+  near(s.values.D70.cardiac_output, 4.33, 0.01);
+});
