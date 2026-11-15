@@ -40,7 +40,7 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
     ├── BONE_DENSITY.md                # bone densitometry: import, relevant parameters and structures
     ├── FINAL_REPORT.md                # final technical report (computer-science paper format)
     ├── report/                        # report figures: architecture.png, bone_loss_by_region.png
-    └── PROMPTS.md                     # useful prompts for the project
+    └── prompts/                       # AI use: prompts by part (data and backend, early warning, front end)
 ```
 
 ## Changes in v5 (2026-11-15): bone densitometry

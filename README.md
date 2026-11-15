@@ -183,11 +183,12 @@ All endpoints are `GET` and return JSON. Timepoints accept `Pre, D7, D21, D30, D
 └── README.md
 ```
 
-Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md). Useful prompts: [`docs/PROMPTS.md`](docs/PROMPTS.md).
+Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md). AI use and prompts by part of the project: [`docs/prompts/`](docs/prompts/) (data and backend, early warning, front end).
 
 ## Changelog
 
 ### v5: bone density
+- **AI use declared:** the prompts of each part of the team are in `docs/prompts/` (`PROMPTS_DATA_BACKEND.md`, `PROMPTS_EARLY_WARNING.md`, `PROMPTS_FRONTEND.md`) and summarized in the final report, section "Use of AI Tools".
 - **Space Apps compliance:** the page icon is now an original heart-and-orbit design (`frontend/public/orbit-care-icon.svg`, `.png`, `favicon.ico`, published under new names so browsers drop the cached icon); the earlier NASA-logo icon was removed because NASA branding is not allowed. The final report names the challenge and has a shorter abstract (under 200 words), a "What is new" section and the design inspiration.
 - **Final report** in computer-science paper format: [`docs/FINAL_REPORT.md`](docs/FINAL_REPORT.md), with the architecture diagram and the bone-loss chart in `docs/report/`.
 - **Early warning (Erik, PR #2):** `/api/analytics/early-warning` validates the day-7 signal out of sample (`services/mining.js`: AUC with bootstrap CI, permutation test, leave-one-subject-out ridge logistic regression, Brier score, CUSUM, shrinkage Mahalanobis distance); a CUSUM trend alarm adds a `trend` recommendation (warning level).
