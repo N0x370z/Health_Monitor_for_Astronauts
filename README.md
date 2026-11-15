@@ -4,77 +4,85 @@
 
 Away from Earth's gravity the heart changes. Fluids shift to the head, plasma volume falls, the heart pumps less blood per beat and loses muscle mass. On returning to gravity, astronauts may faint when they stand up. NASA's 70-day bed rest study (CFT70) shows it clearly: without exercise, left ventricular mass fell **13.7 %** and stroke volume **14.3 %**, and heart rate rose **51 %** on getting up. With exercise countermeasures, those losses were much smaller.
 
-Our goal is to **detect these problems early and prevent them**. The monitor combines:
-- continuous vital signs;
-- periodic echocardiography;
-- orthostatic tests;
-- radiation dose.
+Our goal is to **detect these problems early and prevent them**. The monitor follows the 37 real CFT70 subjects through their echocardiography sessions (before, during and after 70 days of bed rest). It turns each session into:
+- a cardiac score by heart region;
+- alerts with a concrete recommended action and countermeasure;
+- evidence from the study itself about what protects the heart.
 
-It turns them into alerts with a concrete recommended action.
-
-> **Note:** No hardware is used. All data comes from datasets and the project database. This is an educational prototype, not a medical device.
+> **Note:** No hardware is used. All data comes from NASA datasets stored in the project database. This is an educational prototype, not a medical device.
 
 ## Features
 
-- **Crew overview:** every crew member ordered by risk, with heart rate, blood pressure, SpO₂ and temperature, plus the active alerts across all missions.
-- **Crew detail:**
-  - vital signs for the last 24 h with reference ranges;
-  - alerts with the recommended action and countermeasure;
-  - episodes of the last 24 h;
-  - echocardiography trend compared with the NASA CFT70 groups;
-  - resting heart rate, orthostatic tests, exercise adherence and radiation against NASA limits.
-- **Problems and prevention:** the 9 cardiovascular problems of spaceflight, why they happen, what the data shows and how to prevent them.
-- **CFT70 evidence:** 70-day bed rest results by group (Control vs exercise) for each echocardiography metric.
+- **Heart monitor (per subject):**
+  - cardiac score 0–100 by region (left ventricle, aortic outflow, rate and timing, mitral valve, right ventricle) at any timepoint (Pre, D7, D21, D30, D70, R+0, R+3);
+  - key values (ejection fraction, cardiac output, heart rate) and diastolic function by the ASE 2016 criteria;
+  - alerts with the recommended action, the current countermeasure and the recommended one;
+  - full echocardiography table with % change from baseline and weekly trend.
+- **Team:** all subjects ordered by score, with LV mass change, heart rate and response phenotype.
+- **Countermeasures:** what 70 days of bed rest did to each group (Control vs exercise), with confidence intervals, tests and effect sizes, plus findings written from the data.
+- **Data mining:**
+  - reliability of the 3D echo between analysts and the minimum detectable change;
+  - early predictors (day 7 → day 70, day 70 → return);
+  - correlations between changes;
+  - response phenotypes (k-means++).
+- **Problems and prevention:** the 7 cardiovascular problems of spaceflight, why they happen, what the data shows and how to prevent them.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React, JavaScript, Recharts, Vite |
+| Frontend | React, JavaScript, Recharts, Vite (skeleton; the new design is being developed by the team) |
 | Backend | Node.js 22, built-in modules only (`node:http`, `node:sqlite`). No framework, no dependencies |
 | Database | SQLite: `data/health_monitor.sqlite` (schema portable to PostgreSQL) |
-| Data | NASA CFT70 / BRSMCF echocardiography (real), NASA LSDA evidence (real), anonymous crew monitoring (synthetic, calibrated) |
+| Data | NASA CFT70 / BRSMCF echocardiography (real) and NASA LSDA evidence (real). No synthetic data |
 
 ## Architecture
 
+The database lives in the same repository (`data/`). The backend reads it directly, in read-only mode, and serves the web app through a JSON API.
+
 ```text
-┌─────────────────────────────────────────────────┐
-│ React (Frontend) · Vite · Recharts              │
-│ ├── Crew overview and detail                    │
-│ ├── Problems and prevention                     │
-│ └── CFT70 evidence                              │
-│            │                                    │
-│            ▼ GET /api/...  (JSON)               │
-├─────────────────────────────────────────────────┤
-│ Node.js (Backend, no framework)                 │
-│ ├── routes: crew, alerts, problems, study       │
-│ └── services/alerts.js → alerts, risk, episodes │
-├─────────────────────────────────────────────────┤
-│ SQLite (read-only)                              │
-│ └── data/health_monitor.sqlite                  │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│ React (Frontend) · Vite · Recharts                       │
+│ ├── Heart monitor · Countermeasures · Team               │
+│ └── Problems and prevention                              │
+│            │                                             │
+│            ▼ GET /api/...  (JSON)                        │
+├──────────────────────────────────────────────────────────┤
+│ Node.js (Backend, no framework)                          │
+│ ├── routes: subjects, study, analytics, knowledge        │
+│ ├── services/assessment.js → score, alerts, advice       │
+│ ├── services/analytics.js  → statistics, data mining     │
+│ └── services/stats.js      → t tests, ICC, k-means…      │
+├──────────────────────────────────────────────────────────┤
+│ SQLite (read-only, same repository)                      │
+│ └── data/health_monitor.sqlite                           │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ## Data
 
-- **Database:** `data/health_monitor.sqlite`. Tables are described in [`data/README.md`](data/README.md).
+- **Database:** `data/health_monitor.sqlite` (3.6 MB). Tables are described in [`data/README.md`](data/README.md).
 - **Cardiovascular problems tracked:**
   - orthostatic intolerance
   - cardiac atrophy
   - reduced stroke volume
-  - tachycardia and palpitations
+  - tachycardia
   - blood pressure dysregulation
   - diastolic filling changes
-  - hypoxemia
-  - fever
   - radiation-induced circulatory disease
 - **Real data:**
-  - NASA CFT70 / BRSMCF echocardiography: 37 subjects, 7 timepoints, 4 groups, 7,890 values.
-  - NASA Life Sciences Data Archive evidence: 829 datasets, 158 experiments, 241 findings.
-- **Synthetic data:** 16 anonymous crew members on 4 missions (low Earth orbit, Moon, Mars transit, return to Earth). Their trajectories are calibrated with CFT70, and 8 labelled events test the alerts.
-- **Monitoring and prevention logic:** [`docs/CARDIOVASCULAR_MONITORING.md`](docs/CARDIOVASCULAR_MONITORING.md)
+  - NASA CFT70 / BRSMCF echocardiography: 37 subjects, 7 timepoints, 4 groups, 7,890 measured values plus 863 derived with clinical formulas (cardiac output, Tei index, RV systolic pressure, average E/e′).
+  - NASA Life Sciences Data Archive evidence: 829 datasets, 158 experiments, 237 findings.
+- **Monitoring, scoring and data mining:** [`docs/CARDIOVASCULAR_MONITORING.md`](docs/CARDIOVASCULAR_MONITORING.md)
 - **Sources and citations:** [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md)
 - **Method and work record:** [`docs/DATA_METHODOLOGY.md`](docs/DATA_METHODOLOGY.md)
+
+### Key findings from the data
+- **Exercise protects the heart.** Every protocol lost less LV mass than Control. Exercise B vs Control: Hedges' g 1.21, p = 0.011. The differences between protocols are not significant.
+- **A normal cardiac output can hide deconditioning.** Heart rate rises and compensates for the lower stroke volume.
+- **LVOT VTI is the strongest single signal** (Doppler 2D, g = 2.18).
+- **The end-of-mission echo predicts trouble on return.** A lower E/A, LVOT VTI or LV mass at day 70 predicts a larger heart-rate jump on getting up (r = −0.47 to −0.61).
+- **Measurement error matters.** LV mass changes under ~6.5 % cannot be told apart from analyst reading error, so they do not raise alerts.
 
 ## Getting Started
 
@@ -86,7 +94,7 @@ It turns them into alerts with a concrete recommended action.
 cd backend
 cp .env.example .env    # optional
 npm start               # http://localhost:8000/api/health
-npm test                # 9 endpoint tests
+npm test                # 27 tests (endpoints, errors and statistics)
 ```
 
 ### Frontend
@@ -103,29 +111,33 @@ npm run dev             # http://localhost:5173 (proxies /api to the backend)
 | `PORT` | `8000` | HTTP port |
 | `DB_PATH` | `../data/health_monitor.sqlite` | Path to the database |
 | `CORS_ORIGIN` | `*` | Allowed origin |
-| `TIME_SHIFT` | `true` | Shift demo timestamps so the last 24 h end at request time |
 
 ## API
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/health` | Service status |
-| GET | `/api/metrics/last-24h?crew=&mission=&metric=` | Metrics from the last 24 hours (long format) |
-| GET | `/api/missions` | Missions |
-| GET | `/api/crew?mission=` | Crew with risk level, score and latest vital signs |
-| GET | `/api/crew/:code` | Crew detail: risk, active alerts with action, 24 h episodes, echocardiography |
-| GET | `/api/crew/:code/vitals?hours=&metric=` | Vital-sign time series (5 min) |
-| GET | `/api/crew/:code/history?metric=` | Daily history (resting HR, BP, exercise, orthostatic, echo, dose) |
-| GET | `/api/alerts?level=&mission=` | Active alerts for all crew, most severe first |
-| GET | `/api/problems` · `/api/problems/:code` | Cardiovascular problems with countermeasures, rules and evidence |
-| GET | `/api/reference` | Metrics, reference ranges, change thresholds, countermeasures, sources |
-| GET | `/api/study/cft70` · `/api/study/cft70/effects?metric=` | CFT70 study and change by group and timepoint |
+All endpoints are `GET` and return JSON. Timepoints accept `Pre, D7, D21, D30, D70, R+0, R+3` (or `BR-2`, `BR70`…); the default is `D70`. Subjects accept `6546` or `S6546`.
+
+| Endpoint | Description |
+|---|---|
+| `/api/health` | Service status |
+| `/api/subjects?timepoint=&group=&subset=7` | Subjects ordered by score, with status, LV mass change, heart rate and phenotype |
+| `/api/subjects/:code?timepoint=` | Subject dashboard: score by region, key values, diastolic function, alerts, recommendations, countermeasure plan |
+| `/api/subjects/:code/echo?metrics=all` | Echocardiography table: every timepoint with value, % change, status and weekly trend |
+| `/api/alerts?timepoint=&level=&group=` | Alerts for all subjects, most severe first |
+| `/api/study/cft70` | Study, groups, timepoints, key metrics, data quality |
+| `/api/study/cft70/effects?metric=&timepoint=` | Change by group and timepoint with 95 % CI, t-test, Hedges' g vs Control |
+| `/api/study/cft70/countermeasures?timepoint=` | Countermeasure summary cards and findings |
+| `/api/analytics/reliability` | 3D echo agreement between analysts: ICC, SEM, MDC95, Bland-Altman |
+| `/api/analytics/correlations?timepoint=` | Correlations between changes (Pearson, Spearman, Benjamini-Hochberg) |
+| `/api/analytics/predictors` | Early predictors: D7 → D70 losses, D70 → heart-rate rise at R+0 |
+| `/api/analytics/phenotypes?k=2` | Response phenotypes (k-means++) and deconditioning index |
+| `/api/problems` · `/api/problems/:code` | Cardiovascular problems with countermeasures, rules and NASA evidence |
+| `/api/reference` | Metrics, reference ranges, change thresholds, heart regions, countermeasures, sources |
 
 ## Project Structure
 
 ```text
-├── backend/       # Node.js API (src/, test/)
-├── frontend/      # React dashboard (src/views, src/components)
+├── backend/       # Node.js API (src/routes, src/services, test/)
+├── frontend/      # React dashboard (skeleton)
 ├── data/          # health_monitor.sqlite, schema.sql, queries.sql
 ├── docs/          # monitoring logic, sources, methodology, files and changes, prompts
 └── README.md
@@ -135,7 +147,30 @@ Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGE
 
 ## Changelog
 
-### v3: cardiovascular focus (current)
+### v4: real data only and data mining (current)
+
+**Database**
+- Removed the synthetic crew (16 crew members, 4 missions, 24 h vital signs and history). The monitor now follows the real CFT70 subjects.
+- Removed what did not help the cardiovascular focus or had no real data: hypoxemia, fever, SpO₂, temperature, exercise minutes and radiation spikes. The precomputed `study_effect` table is now computed by the backend.
+- Added derived metrics with clinical formulas (cardiac output, Tei index, RV systolic pressure, average E/e′). The formula of every derived value is stored with it.
+- Added guideline ranges (ASE 2015, ASE 2016, Rudski 2010) and the heart regions used by the cardiac score.
+- Size: 9.4 MB → 3.6 MB.
+
+**Backend**
+- Rebuilt around the subjects of the study:
+  - cardiac score by region;
+  - measurement-error filter;
+  - diastolic assessment;
+  - alerts and recommendations.
+- New data mining: group statistics with confidence intervals and effect sizes, 3D echo reliability, correlations, early predictors and response phenotypes.
+- Removed the crew endpoints (`/api/crew`, `/api/missions`, `/api/metrics/last-24h`) and `TIME_SHIFT`.
+- 27 tests, including a statistics module checked against reference values.
+- Hardening: a malformed URL returns 400 instead of stopping the server; change analyses (countermeasures, correlations, phenotypes) reject the baseline `Pre` with 400.
+
+**Frontend**
+- Not modified. Its crew views no longer receive data; the new design uses the subject endpoints.
+
+### v3: cardiovascular focus
 
 **Database**
 - Imported the NASA CFT70 / BRSMCF echocardiography files: 37 subjects, 7 timepoints, 4 groups, 7,890 values with quality flags.
@@ -144,14 +179,14 @@ Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGE
   - A `0.0` value in the subset was treated as missing.
   - The 3D column `LVSV` was identified as end-systolic volume; stroke volume and ejection fraction were derived from it.
   - Analyst names were replaced by codes.
-- Added a cardiovascular knowledge base: 9 problems, 30 alert rules, 8 countermeasures backed by NASA evidence, and change-from-baseline thresholds derived from CFT70.
-- Recalibrated the synthetic crew with the CFT70 trajectories and added periodic echocardiography sessions and 8 labelled events.
+- Added a cardiovascular knowledge base: problems, alert rules, countermeasures backed by NASA evidence, and change-from-baseline thresholds derived from CFT70.
+- Recalibrated the synthetic crew with the CFT70 trajectories (removed in v4).
 - Limited the NASA evidence to cardiovascular topics. Removed cabin temperature and pressure.
 
 **Code**
 - Removed the Python data scripts (`data/scripts/`, `data/requirements.txt`). The database is now the source of truth.
-- **Backend:** Node.js with built-in modules only, no FastAPI. It reads the database directly, applies the prevention logic (alerts, risk index, 24 h episodes) and includes 9 tests.
-- **Frontend:** React + Recharts. Views: crew overview, crew detail, problems and prevention, CFT70 evidence.
+- **Backend:** Node.js with built-in modules only. It reads the database directly and applies the prevention logic.
+- **Frontend:** React + Recharts skeleton.
 
 **Docs**
 - New: [`CARDIOVASCULAR_MONITORING.md`](docs/CARDIOVASCULAR_MONITORING.md), [`FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md), [`PROMPTS.md`](docs/PROMPTS.md).
@@ -170,10 +205,11 @@ Full details: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md) and [`doc
 
 ## Future Work
 
-- Error tracking with Sentry
+- Connect the new frontend design to the subject endpoints
+- Daily check-in storage (requires a write path; the database is read-only today)
+- Validation of the score on an independent cohort or spaceflight data
+- Medical review of the heuristic thresholds, region weights and score bands
 - Authentication and per-role views (crew, flight surgeon)
-- Live data ingestion from wearable devices
-- Medical review of the heuristic thresholds
 
 ## License
 
