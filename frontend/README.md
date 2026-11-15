@@ -28,15 +28,18 @@ When the API is available, the values come from `data/health_monitor.sqlite` (sa
 Terms and abbreviations used on the screens: [`../docs/GLOSSARY.md`](../docs/GLOSSARY.md).
 
 ## Screens
+Each screen has a **mini tutorial** (`src/data/tutorial.js`, `src/components/Tutorial.jsx`). It opens the first time a screen is visited and again with the **How it works** button in the header. Seen tutorials are remembered in the browser.
+
 - **Heart monitor**: echo table by timepoint, interactive heart beating at the measured heart rate, cardiac score by chamber, LV mass vs baseline, findings and actions, % change timeline. ▶ Replay walks through the study.
 - **Countermeasures**: group comparison (Control −13.7 % LV mass at D70 vs Exercise B −2.9 %) and crew table.
+- **Live vitals (v2.1)**: pulse and SpO₂ are **simulated** every second and marked LIVE SIM; the pulse starts from the measured heart rate of the subject. An ECG trace (Lead II, simulated) appears in the Rate & timing drawer. Nothing is written to the database.
 - **Daily check-in**: mood, stress, sleep, symptoms (saved in the browser).
 
 ## Structure
 ```
-src/data/        echo.js (API loading with CSV fallback, derived metrics) · config.js (status levels, data-only mode) · echo/*.csv
-src/sim/         heart.js (metric status, chambers, findings, countermeasures) · history.js (check-ins)
-src/components/  Heart.jsx · TimelineChart.jsx · ui.jsx · Emoji.jsx
+src/data/        echo.js (API loading with CSV fallback, derived metrics) · tutorial.js (mini tutorial content) · config.js (status levels, data-only mode) · echo/*.csv
+src/sim/         heart.js (metric status, chambers, findings, countermeasures) · history.js (check-ins) · live.js (simulated pulse and SpO₂)
+src/components/  Heart.jsx · Ecg.jsx · Tutorial.jsx · TimelineChart.jsx · ui.jsx · Emoji.jsx
 src/views/       HeartMonitor · Countermeasures · CheckIn · Panels (drawer)
 api/             index.js (Vercel function that runs ../backend)
 ```

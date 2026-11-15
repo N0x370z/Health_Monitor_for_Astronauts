@@ -13,7 +13,7 @@ Our goal is to **detect these problems early and prevent them**. The monitor fol
 
 ## Features
 
-The ORBIT CARE web app shows the heart monitor, countermeasures (with the backend statistics) and the daily check-in. Everything below is available through the API; the screens not yet in the web app (team, data mining, problems) can be added from the same endpoints.
+The ORBIT CARE web app shows the heart monitor, countermeasures (with the backend statistics) and the daily check-in, each with a short tutorial (**How it works**). Pulse and SpO₂ marked LIVE SIM are simulated; everything else is real study data. Everything below is available through the API; the screens not yet in the web app (team, data mining, problems) can be added from the same endpoints.
 
 - **Heart monitor (per subject):**
   - cardiac score 0–100 by region (left ventricle, aortic outflow, rate and timing, mitral valve, right ventricle) at any timepoint (Pre, D7, D21, D30, D70, R+0, R+3);
@@ -195,6 +195,7 @@ Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGE
 **Frontend**
 - Replaced the skeleton with the team's ORBIT CARE v2 design (branch `v2-frontend`, history kept): heart monitor, countermeasures and daily check-in, offline with the CFT70 echo CSV files.
 - Fixes: 3D echo analysts coded A1–A3 as in the database; RVSP uses RAP 3 mmHg like the database (it used 5); NASA logo as the page icon.
+- ORBIT CARE v2.1 merged (simulated live pulse and SpO₂, ECG in Rate & timing) and a mini tutorial for each screen.
 - Connected to the backend: the data comes from the database through the API (bundled CSV files as fallback) and Countermeasures shows the Welch t-test and Hedges' g vs Control. The API also runs on Vercel as a function.
 
 ### v3: cardiovascular focus

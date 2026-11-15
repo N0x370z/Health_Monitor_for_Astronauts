@@ -8,6 +8,8 @@ import HeartMonitor from "./views/HeartMonitor.jsx";
 import Countermeasures from "./views/Countermeasures.jsx";
 import CheckIn from "./views/CheckIn.jsx";
 import { SystemDrawer, ReportModal } from "./views/Panels.jsx";
+import Tutorial, { TutorialButton } from "./components/Tutorial.jsx";
+import { useTutorial } from "./data/tutorial.js";
 
 const TABS = [
   ["heart", "Heart monitor", "heartLine", "Heart"],
@@ -45,6 +47,7 @@ export default function App() {
   const hs = useMemo(() => heartState(subject, tpKey), [subject, tpKey]);
   const fnd = useMemo(() => findings(subject, tpKey), [subject, tpKey]);
   const live = useLiveVitals(subject, tpKey);
+  const tour = useTutorial(tab);
   const today = history.find((d) => d.day === TODAY);
 
   // Reproducir la línea de tiempo del estudio
@@ -152,6 +155,7 @@ export default function App() {
             <p>{HEAD[1]}</p>
           </div>
           <div className="head-actions">
+            <TutorialButton onClick={tour.show} />
             <button className={`random-btn ${spin ? "spin" : ""}`} onClick={randomSample} title="Load a random subject and timepoint from the CFT70 database">
               <Icon name="dice" size={22} /><span>Random data</span>
             </button>
@@ -180,6 +184,7 @@ export default function App() {
       </nav>
 
       <SystemDrawer system={drawerData} onClose={() => setChamberKey(null)} live={live} />
+      {tour.open && <Tutorial key={tour.open} tab={tour.open} onClose={tour.close} />}
       {report != null && <ReportModal text={report} delay="next comm window" onClose={() => setReport(null)} />}
     </div>
   );

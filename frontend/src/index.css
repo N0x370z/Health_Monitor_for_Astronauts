@@ -494,3 +494,17 @@ svg [role="button"]:focus-visible text:first-of-type { text-decoration: underlin
 .live-tile b.err-val { color: #fda29b; }
 .lt-src { font-size: 10.5px; color: #7f97bd; }
 @media (prefers-reduced-motion: reduce) { .live-badge i, .live-dot, .lt-heart { animation: none; } }
+
+/* ================= mini tutorial por sección ================= */
+.tour { width: min(520px, 100%); position: relative; padding: 26px; }
+.tour-kicker { margin: 0 40px 14px 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--primary); }
+.tour-step { display: flex; gap: 16px; align-items: flex-start; min-height: 120px; }
+.tour-step h3 { font-size: 18px; margin-bottom: 6px; }
+.tour-step p { margin: 0; color: var(--text-2); line-height: 1.6; font-size: 15px; }
+.tour-icon { flex: none; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); }
+.tour-dots { display: flex; justify-content: center; gap: 8px; margin: 18px 0 16px; }
+.tour-dots button { width: 9px; height: 9px; padding: 0; border-radius: 50%; border: none; background: var(--line-2); cursor: pointer; }
+.tour-dots button.on { width: 22px; border-radius: 6px; background: var(--primary-2); }
+.tour-actions { display: flex; align-items: center; gap: 8px; }
+.tour-btn { white-space: nowrap; }
+@media (max-width: 560px) { .tour { padding: 20px 16px; } .tour-step { flex-direction: column; gap: 10px; } }

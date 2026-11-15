@@ -107,4 +107,6 @@ Terms and abbreviations needed to read the ORBIT CARE web app. Attention / Criti
 | **ECG** | Electrocardiogram. The app suggests it when an irregular rhythm is suspected. |
 | **SpO₂** | Blood oxygen saturation. Listed under "Not in database": the app does not measure it. |
 | **API / Live / Offline** | Data source. *Live* means the data comes from the database through the API. *Offline* means it comes from the CSV files bundled with the app. |
+| **LIVE SIM** | Value simulated every second in the browser (pulse and SpO₂). The pulse starts from the measured heart rate. Not study data. |
+| **How it works** | Button that opens the mini tutorial of the current screen. |
 | **Replay** | Steps automatically through the study timepoints, from Pre to R+3. |
