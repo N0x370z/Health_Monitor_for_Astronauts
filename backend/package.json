@@ -1,0 +1,13 @@
+{
+  "name": "health-monitor-backend",
+  "version": "1.0.0",
+  "description": "API de monitoreo cardiovascular de astronautas sobre data/health_monitor.sqlite (sin dependencias).",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node --no-warnings=ExperimentalWarning src/server.js",
+    "dev": "node --no-warnings=ExperimentalWarning --watch src/server.js",
+    "test": "node --no-warnings=ExperimentalWarning --test"
+  }
+}

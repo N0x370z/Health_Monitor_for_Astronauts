@@ -1,145 +1,104 @@
 # Data Methodology and Work Record
 
-Formal record of how the project database (`data/health_monitor.sqlite`) was built: objective, method, decisions, validation and limitations. Sources and citations are listed in [`DATA_SOURCES.md`](DATA_SOURCES.md).
+Formal record of how the project database (`data/health_monitor.sqlite`) was built. It covers the objective, method, decisions, validation and limitations. Sources are listed in [`DATA_SOURCES.md`](DATA_SOURCES.md); the monitoring logic is in [`CARDIOVASCULAR_MONITORING.md`](CARDIOVASCULAR_MONITORING.md).
 
 ---
 
 ## 1. Objective
 
-The goal is a database the Health Monitor dashboard can query (`GET /api/metrics/last-24h`) to show crew health and cabin conditions and to raise alerts **before** a problem becomes serious. It must:
+A database that lets the Health Monitor detect, early, the **cardiovascular problems caused by spaceflight** and recommend how to prevent them. It must:
 
-- cover **temperature, pressure, cardiovascular function, oxygen saturation and radiation**;
-- base every alert threshold on a cited clinical or scientific source;
+- be grounded on real data (NASA CFT70 echocardiography, NASA LSDA evidence, clinical guidelines);
+- cite every threshold;
 - contain no personal data;
-- be reproducible from the repository.
+- be served directly to the backend.
 
-## 2. Why synthetic data
+## 2. Real data only (since v4)
 
-Continuous physiological records of real astronauts are privacy-protected and are released by NASA only through a formal data request. Public records do contain **aggregated, published results**: group means, percentages, ranges. The chosen method was therefore:
-
-1. Use real public sources (NASA LSDA results and clinical guidelines) to define normal and critical ranges.
-2. Generate synthetic, anonymous time series from those ranges.
-3. Inject labelled anomalies, so that alert logic can be tested against a known ground truth.
+Continuous physiological records of real astronauts are privacy-protected, so versions 1 to 3 used a **synthetic** crew calibrated with CFT70. In v4 that crew was **removed**: the monitor now works on the 37 real CFT70 subjects, who play the role of the crew. They are monitored at each echocardiography session (Pre, D7, D21, D30, D70, R+0, R+3) instead of every 5 minutes. This matches the new frontend design, which shows the CFT70 subjects directly.
 
 ## 3. Method
 
-### Phase 1. Catalog cleaning
-- **Input:** `by_topic` CSV export of the LSDA catalog (13 files, 2,593 rows in `datasets_all.csv`).
-- **Columns removed:** administrative columns not related to health (`dataset_catalog`, `experiment_id`, `availability`, `processing_level`, `file_name`, `file_format`, `file_size`, `release_date`). `nlsp_url` was kept for traceability.
-- **Text cleaning:** removed HTML entities and tags; normalized placeholder values (`not_applicible`, `Not applicable`) to empty and species names (`Human (Homo sapiens)` → `Human`).
-- **Topic tagging:** 520 rows had no `health_topics`. They were classified with keyword rules into health topics; rows with no health relation were removed.
-- **Result:** 2,390 health-related datasets.
+### Phase 1. Catalog cleaning and enrichment (NASA LSDA)
+1. Cleaned the `by_topic` catalog: 2,593 → 2,390 health-related datasets.
+2. Read their public records on the NASA Life Sciences Portal.
+3. Linked them to 2,676 experiment records with objectives, approach and results.
 
-### Phase 2. Enrichment through the NASA Life Sciences Portal
-- Read the public JSON record of each of the 2,390 `nlsp_url` links (all HTTP 200). Requests were throttled to about 5 per second.
-- Read the 2,676 public experiment records, which include objectives, approach and results.
-- Linked datasets to experiments by `experiment_id`: 455 experiments were linked and 438 of them have a published results section.
-- For the 17 experiments without results, two fallbacks were used: result sentences from their own datasets, or the most similar experiment with results (TF-IDF cosine similarity).
-- **Not possible:** downloading the raw data files, because the API does not expose their keys. Privacy-protected data was not requested.
+### Phase 2. Echocardiography import (NASA CFT70 / BRSMCF)
+1. Read the four CSV files and confirmed that the two "7 Subjects" files are identical and a subset of "Echo All Data 2".
+2. Normalized timepoints (BR-2, BR7, BR21, BR30, BR70, R+0, R+3) and treatment groups (Control, Exercise A, Exercise B, Flywheel).
+3. Converted the data to long format (`study_echo_measurement`): one row per subject, timepoint, metric and 3D analyst.
+4. Replaced the 3D analysts' names with codes (A1–A3). Kept the data-quality comments as flags.
+5. Derived stroke volume and ejection fraction (3D), E/A, E/e′ and fractional shortening.
+6. Computed the mean change from BR-2 by group and timepoint. The 3D analysts are averaged per subject first. (Stored as `study_effect` until v3; since v4 the backend computes it with confidence intervals and tests.)
 
-### Phase 3. Evidence extraction
-- Split the results sections into sentences and kept those that report a finding (increase, decrease, significance, percentages).
-- Linked each finding to a monitor metric with keyword rules, and flagged findings that contain numbers.
+### Phase 3. Cardiovascular knowledge base
+| Table | Content |
+|---|---|
+| `cv_problem` | 7 problems, each with mechanism, evidence, consequence, mission phase and severity (9 until v3) |
+| `metric` | 48 metrics: 27 2D/Doppler/TDI, 3 3D, 9 derived, reference vital signs, orthostatic and radiation |
+| `medical_reference` | 25 absolute ranges (NEWS2, ACC/AHA, ASE 2015 and 2016, Rudski 2010, Freeman, ACSM, NASA-STD-3001) |
+| `change_threshold` | 7 change-from-baseline thresholds derived from CFT70 Control vs exercise |
+| `countermeasure`, `problem_countermeasure` | 8 countermeasures with NASA evidence |
+| `alert_rule` | 25 rules: condition → level → action → countermeasure |
+| `cardiac_region`, `region_metric` | 5 heart regions and the 15 metrics that make up the cardiac score (v4) |
 
-### Phase 4. Medical reference table (core of the database)
-- One row per metric and context: Earth, low Earth orbit, lunar surface, Mars transit, Mars surface, exercise, post-landing, crew cabin.
-- Each row stores `normal_min`, `normal_max`, `critical_low`, `critical_high`, the expected spaceflight value, its primary source, an optional NASA evidence source, and a confidence level.
-- Alert rule used everywhere:
+### Phase 4. Synthetic crew monitoring (v3, removed in v4)
+In v3, 16 synthetic crew members on 4 missions (24 h vital signs every 5 min, daily history, 8 injected events) were used to test the alerts. They were removed in v4 together with the tables `mission`, `crew_member`, `measurement`, `daily_measurement` and `event`.
 
-```text
-critical  if value <= critical_low  or value >= critical_high
-warning   if value <  normal_min    or value >  normal_max
-normal    otherwise
-```
+### Phase 5. Evidence
+NASA LSDA result sentences were linked to each cardiovascular problem by keyword rules (241 findings; 237 after removing the non-cardiovascular problems in v4). Datasets and experiments outside the cardiovascular scope were removed.
 
-- Context resolution, most specific first: mission environment → `earth` (1 g) → activity (`exercise`, `daily_mean`) → `crew_cabin` → `post_landing` → `any`.
-- **Adaptations, documented in each row:**
-  - Heart rate `normal_min` is 45 bpm instead of the NEWS2 value of 51 bpm, to cover trained crew during sleep.
-  - Systolic `normal_min`/`normal_max` are 100/179 mmHg for healthy adults. The NEWS2 critical limits (≤90, ≥220) were kept.
-  - The exercise context avoids false alarms during the daily countermeasure session.
-
-### Phase 5. Synthetic data generation
-- **Missions:**
-
-  | Mission | Environment | Gravity | Day of mission |
-  |---|---|---|---|
-  | `SIM-LEO` | ISS-like low Earth orbit | 0 g | 120/180 |
-  | `SIM-MOON` | Lunar surface base | 1/6 g | 12/30 |
-  | `SIM-MARS` | Mars transit | 0 g | 95/210 |
-  | `SIM-RETURN` | Earth, after 6 months in orbit | 1 g | 7/21 |
-
-- **Crew:** 16 pseudonymous members, 4 per mission. Each has random baselines for heart rate, blood pressure, temperature and prior career dose.
-- **Last 24 h, every 5 minutes:**
-  - Crew: heart rate, systolic and diastolic pressure, body temperature, SpO₂. The model includes a circadian rhythm, a sleep schedule (22:00–06:00 GMT) and a one-hour exercise block per crew member.
-  - Module: radiation dose rate, spike ratio, cabin temperature, cabin pressure. Low Earth orbit includes about 6 South Atlantic Anomaly passes per day.
-- **Mission history:** daily mean blood pressure, orthostatic tests after a change of gravity, and cumulative 30-day, 1-year and career radiation dose.
-- **Injected anomalies (ground truth):**
-
-  | Event | Mission | Description |
-  |---|---|---|
-  | EVT01 | SIM-LEO | Tachycardia episode at rest |
-  | EVT02 | SIM-MARS | Solar particle event |
-  | EVT03 | SIM-MARS | Respiratory infection: fever and low SpO₂ |
-  | EVT04 | SIM-MOON | Slow cabin leak |
-  | EVT05 | SIM-LEO | Thermal control failure |
-  | EVT06 | SIM-MOON | Orthostatic intolerance on arrival at 1/6 g |
-  | EVT07 | SIM-RETURN | Re-adaptation to 1 g |
-  | EVT08 | SIM-LEO | Rising blood pressure |
-
-- The generator is deterministic (`--seed 42`). `--end` sets the end of the 24-hour window.
-
-### Phase 6. Database
-- Normalized schema (third normal form), portable to PostgreSQL and SQLite: `data/schema.sql`.
-- Three groups of tables:
-  - Medical reference: `risk_domain`, `source`, `metric`, `medical_reference`, `mission`.
-  - Synthetic data: `crew_member`, `event`, `measurement`, `daily_measurement`.
-  - Real evidence: the `nasa_*` tables.
-- `data/scripts/build_db.py` regenerates the reference and synthetic data and writes `data/health_monitor.sqlite`. If the NASA CSV files are not present, it keeps the `nasa_*` tables of the existing database, so the repository alone is enough to rebuild.
+### Phase 6. Real-data-only database and data mining (v4)
+1. **Removed what does not help:** the synthetic crew tables and view, `study_effect` (now computed live), the problems hypoxemia and fever, and the metrics `spo2`, `body_temp`, `exercise_minutes`, `dose_rate_spike_ratio` and `resting_heart_rate` (no real data). Rules, ranges, findings and sources that only served them were removed too. The database went from 9.4 MB to 3.6 MB.
+2. **Retargeted** the resting heart-rate threshold, range and rules to `hr_tdi_left`, the heart rate actually measured during the CFT70 echo.
+3. **Derived metrics** with clinical formulas: cardiac output, Tei index, RV systolic pressure and average E/e′ (863 new values). The formula of every derived value, including those from v3 (stroke volume, EF, E/A, lateral E/e′, fractional shortening, re-checked against the raw values), is stored in `comment`.
+4. **New knowledge:** ranges for average E/e′ (ASE 2016), RV S′ (ASE 2015) and RVSP (Rudski 2010); a change threshold for the Tei index; 3 alert rules; the heart regions of the cardiac score; short timepoint labels (Pre, D7… R+3) used by the frontend.
+5. **Data mining in the backend** (`backend/src/services/analytics.js`, details in [`CARDIOVASCULAR_MONITORING.md`](CARDIOVASCULAR_MONITORING.md#5-data-mining)):
+   - group effects with 95 % CI, t-tests and Hedges' g;
+   - inter-analyst reliability of the 3D echo (ICC, SEM, MDC95, Bland-Altman), used to filter changes within measurement error;
+   - correlations with Benjamini-Hochberg correction;
+   - early predictors (D7 → D70, D70 → R+0) by linear regression;
+   - response phenotypes by k-means++ and a deconditioning index.
+6. The migration was applied once with SQL against the database, after a backup. It is summarized here; no script was added to the repository.
 
 ### Phase 7. Validation
-`data/scripts/inspect_db.py` checks the requirements below and writes an HTML report with charts to `data/db/report.html`.
+| Check | Result |
+|---|---|
+| Foreign keys and integrity | 0 errors (`PRAGMA foreign_key_check`, `integrity_check`) |
+| `schema.sql` | Builds an empty database with exactly the same objects as `health_monitor.sqlite` |
+| Group effects vs independent SQL (`queries.sql` #2) | Identical (e.g. LV mass, Control D70: −13.7 %) |
+| Personal data | No analyst names or personal identifiers in any table |
+| Cardiac score | All subjects Nominal before bed rest; AUC Control vs exercise 0.97 at D70 (in-sample) |
+| Statistics module | Checked against t tables and an independent numerical integration |
+| Backend tests | 25/25 pass (`backend/test/api.test.js`, `backend/test/stats.test.js`) |
 
-| ID | Requirement | Result |
-|---|---|---|
-| R01 | Only temperature, pressure, cardiovascular, SpO₂ and radiation metrics | PASS (14 metrics) |
-| R02–R06 | Data present for every metric of each area | PASS |
-| R07 | Radiation contexts for LEO, Moon and Mars; spikes detected | PASS |
-| R08 | Last 24 h every 5 minutes for every crew member | PASS (16 × 288 points) |
-| R09 | Every metric has a reference range with a cited source | PASS |
-| R10 | Stored status matches the alert rule for every measurement | PASS (0 discrepancies) |
-| R11 | No personal data | PASS |
-| R12 | Foreign keys and no duplicates | PASS |
-| R13 | Every injected anomaly raises at least one alert | PASS (8/8 events) |
-| R14 | Every area has citable real NASA data | PASS |
-| R15 | Thresholds verified against their source | WARN: 4 rows `needs_verification` |
+## 4. Build process and scripts
 
-## 4. Limitations
+The database was built once with a build script kept **outside the repository**. As of 2026-11-14, the database file itself is the source of truth:
 
-- The time series are synthetic. They show realistic patterns but are not measurements of real people.
-- Four thresholds are pending verification against the current NASA-STD-3001: cabin temperature, cabin pressure, and the 30-day and 1-year dose limits.
-- `SRC_PROJECT` thresholds are design heuristics and should be reviewed with medical advice.
-- Topic tagging and evidence linking use keyword rules. Some findings may be misclassified.
-- Raw LSDA data files were not downloaded, so the evidence is limited to published results and metadata.
+- The Python scripts in `data/scripts/` (reference data, generator, NASA normalization, builder, inspector) were **removed**. Data is no longer shown through them; the backend and frontend read the database directly.
+- To change data, edit the database with SQL (see `data/schema.sql` and `data/queries.sql`) and document the change in this file.
 
-## 5. Reproducibility
+## 5. Limitations
 
-```bash
-pip install -r data/requirements.txt
-python data/scripts/build_db.py          # reference + synthetic data -> data/health_monitor.sqlite
-python data/scripts/inspect_db.py        # requirement checks + HTML report
-# Optional: refresh the nasa_* tables from the cleaned catalog folder
-python data/scripts/normalize_nasa.py --src "<cleaned catalog folder>"
-```
+- Bed rest is an analogue of spaceflight, not spaceflight. CFT70 has no blood pressure, SpO₂ or continuous heart rate.
+- CFT70 groups are small (7–11 per group). The change thresholds, region weights and score bands are heuristics and need medical review.
+- The score validation is in-sample: the thresholds come from the same data.
+- The units of the echo variables were inferred from their value ranges.
+- The 30-day and 1-year NASA limits are in mGy-Eq (organ dose); the database compares them with mSv as an approximation.
+- Evidence linking uses keyword rules and can misclassify sentences.
 
 ## 6. Change log
 
 | Date | Change |
 |---|---|
-| 2026-11-14 | Catalog cleaned (Phase 1) and enriched through the NLSP portal (Phases 2–3) |
-| 2026-11-14 | First database version: 41 metrics covering NASA's 5 spaceflight hazards (radiation, isolation, distance, gravity, environment) |
-| 2026-11-14 | Data CSV files removed from version control |
-| 2026-11-14 | Scope reduced to temperature, pressure, cardiovascular, SpO₂ and radiation (14 metrics). Reference tables moved to `data/scripts/reference_data.py`. The database file `data/health_monitor.sqlite` is now versioned. Sources and methodology documented |
+| 2026-11-14 | Catalog cleaned and enriched through the NLSP portal |
+| 2026-11-14 | v1: 41 metrics covering NASA's 5 spaceflight hazards |
+| 2026-11-14 | v2: scope reduced to temperature, pressure, cardiovascular, SpO₂ and radiation. Database file versioned. Citations verified |
+| 2026-11-14 | v3: cardiovascular focus. CFT70/BRSMCF echocardiography imported. Knowledge base of problems, rules and countermeasures added. Crew data recalibrated with CFT70. Cabin temperature and pressure removed. Python scripts removed. Node.js backend (no framework) and React frontend added |
+| 2026-11-15 | **v4: real data only and data mining.** Synthetic crew, `study_effect` and non-cardiovascular metrics removed. Derived metrics (cardiac output, Tei, RVSP, average E/e′), heart regions and new guideline ranges added. Backend rebuilt around the CFT70 subjects: cardiac score by region, measurement error filter, ASE diastolic assessment, group statistics, reliability, predictors and phenotypes. Malformed URLs return 400 instead of stopping the server; change analyses reject the baseline. 27 tests |
 
 ## 7. Tools
 
-Python 3 (standard library, `sqlite3`), pandas and matplotlib. Data preparation and code were developed with the help of an AI coding assistant (Claude Code). All sources, values and results are listed in this document and in [`DATA_SOURCES.md`](DATA_SOURCES.md) so they can be checked independently.
+SQLite, Python 3 with pandas (one-off build, outside the repository), SQL migrations, Node.js 22 (`node:sqlite`, `node:http`) for the backend, and React, Recharts and Vite for the frontend. Data preparation and code were developed with the help of an AI coding assistant (Claude Code). All sources, values and results are documented so they can be checked independently.

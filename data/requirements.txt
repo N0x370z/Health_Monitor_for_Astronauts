@@ -1,2 +1,0 @@
-pandas>=2.0      # only for scripts/normalize_nasa.py
-matplotlib>=3.7  # scripts/inspect_db.py
