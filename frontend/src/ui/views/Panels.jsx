@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { Icon, Dot, Evidence, Sparkline } from "../components/ui.jsx";
 import Ecg from "../components/Ecg.jsx";
-import { TIMEPOINTS } from "../data/echo.js";
-import { STATUS_LABEL, STATUS_COLOR } from "../data/config.js";
+import { TIMEPOINTS } from "../../data/echo.js";
+import { STATUS_LABEL, STATUS_COLOR } from "../../domain/config.js";
 
 function useEsc(onClose) {
   useEffect(() => {

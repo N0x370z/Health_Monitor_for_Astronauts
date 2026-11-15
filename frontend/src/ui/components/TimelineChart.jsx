@@ -1,5 +1,5 @@
-import { TIMEPOINTS } from "../data/echo.js";
-import { delta } from "../sim/heart.js";
+import { TIMEPOINTS } from "../../data/echo.js";
+import { delta } from "../../domain/heart.js";
 
 // Gráfica ancha (parte inferior de la pantalla de referencia): % de cambio vs Pre por métrica a lo largo del estudio.
 const SERIES = [

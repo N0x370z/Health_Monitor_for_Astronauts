@@ -1,9 +1,10 @@
 // Fuente principal de datos: estudio BRSMCF CFT70 (70 días de reposo en cama con inclinación cabeza abajo,
 // análogo de microgravedad). Ecocardiografía 2D/Doppler/TDI + ecocardiografía 3D.
 // Los CSV se empaquetan con la app (funciona offline).
-import allCsv from "./echo/echo_all.csv?raw";
-import crewCsv from "./echo/echo_7_subjects.csv?raw";
-import d3Csv from "./echo/echo_3d.csv?raw";
+import allCsv from "./csv/echo_all.csv?raw";
+import crewCsv from "./csv/echo_7_subjects.csv?raw";
+import d3Csv from "./csv/echo_3d.csv?raw";
+import { getJson, setApiOnline } from "./api.js";
 
 export const SOURCES = {
   echoAll: { id: "BRSMCF CFT70 Echo All Data", detail: "37 subjects · 2D/Doppler/TDI echo · 5 timepoints" },
@@ -192,7 +193,6 @@ sortSubjects();
 export const TREATMENTS = ["Control", "Exercise A", "Exercise B", "Flywheel"];
 
 // ── Conexión con el backend (data/health_monitor.sqlite) ──
-export const API_BASE = import.meta.env.VITE_API_URL ?? "";
 export const TREATMENT_BY_GROUP = { CONTROL: "Control", EXERCISE_A: "Exercise A", EXERCISE_B: "Exercise B", FLYWHEEL: "Flywheel", UNASSIGNED: "Unassigned" };
 const TP_BY_LABEL = Object.fromEntries(TIMEPOINTS.map((t) => [t.label, t.key]));
 // clave del frontend → metric_code de la base
@@ -225,25 +225,13 @@ export function fromApi(data) {
 /** Carga los datos de la base vía API. Si no responde en 5 s, se quedan los CSV empaquetados. */
 export async function loadEcho() {
   try {
-    const res = await fetch(`${API_BASE}/api/study/cft70/echo-data`, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = fromApi(await res.json());
+    const data = fromApi(await getJson("/api/study/cft70/echo-data"));
     if (!Object.keys(data.subjects).length) throw new Error("empty");
     Object.assign(ECHO, data, { source: "api" });
+    setApiOnline(true);
     sortSubjects();
   } catch (err) {
     console.warn("ORBIT CARE: API no disponible, usando los CSV empaquetados.", err.message);
   }
   return ECHO.source;
-}
-
-/** GET a la API (solo si los datos vienen de la base). Devuelve null si no hay API o si falla. */
-export async function apiJson(path) {
-  if (ECHO.source !== "api") return null;
-  try {
-    const res = await fetch(`${API_BASE}${path}`, { signal: AbortSignal.timeout(5000) });
-    return res.ok ? await res.json() : null;
-  } catch {
-    return null;
-  }
 }

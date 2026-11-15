@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, Icon } from "../components/ui.jsx";
 import { MoodFace, Emoji } from "../components/Emoji.jsx";
-import { streak, TODAY } from "../sim/history.js";
+import { streak, TODAY } from "../../domain/history.js";
 
 const MOODS = [1, 2, 3, 4, 5];
 const SYMPTOMS = ["Headache", "Nausea", "Back pain", "Congestion", "Sore throat", "Rash", "Vision changes", "Insomnia", "Anxiety", "Irritability"];

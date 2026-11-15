@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLiveVitals } from "./sim/live.js";
-import { TODAY } from "./sim/history.js";
-import { ECHO, SUBJECT_IDS, TIMEPOINTS } from "./data/echo.js";
-import { heartState, findings, HM, readingText } from "./sim/heart.js";
-import { Icon, Dot } from "./components/ui.jsx";
-import HeartMonitor from "./views/HeartMonitor.jsx";
-import Countermeasures from "./views/Countermeasures.jsx";
-import CheckIn from "./views/CheckIn.jsx";
-import { SystemDrawer } from "./views/Panels.jsx";
-import Tour from "./components/Tour.jsx";
+import { useLiveVitals } from "../domain/live.js";
+import { TODAY } from "../domain/history.js";
+import { ECHO, SUBJECT_IDS, TIMEPOINTS } from "../data/echo.js";
+import { heartState, findings, HM, readingText } from "../domain/heart.js";
+import { Icon, Dot } from "../ui/components/ui.jsx";
+import HeartMonitor from "../ui/views/HeartMonitor.jsx";
+import Countermeasures from "../ui/views/Countermeasures.jsx";
+import CheckIn from "../ui/views/CheckIn.jsx";
+import { SystemDrawer } from "../ui/views/Panels.jsx";
+import Tour from "../ui/components/Tour.jsx";
 
 const TABS = [
   ["heart", "Heart monitor", "heartLine", "Heart"],

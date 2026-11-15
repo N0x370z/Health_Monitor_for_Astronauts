@@ -1,6 +1,6 @@
 // Motor cardíaco: estado por métrica, cámaras del corazón, hallazgos y comparación de contramedidas.
 import { ECHO, TIMEPOINTS, TREATMENTS } from "../data/echo.js";
-import { worst, RANK, DATA_ONLY } from "../data/config.js";
+import { worst, RANK, DATA_ONLY } from "./config.js";
 
 // lo/hi: rango absoluto (warn, crit). dWarn/dCrit: % de cambio vs la línea base personal (Pre).
 export const HM = {

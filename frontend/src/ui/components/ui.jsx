@@ -1,6 +1,6 @@
 import { useId } from "react";
-import { SOURCES } from "../data/echo.js";
-import { STATUS_COLOR } from "../data/config.js";
+import { SOURCES } from "../../data/echo.js";
+import { STATUS_COLOR } from "../../domain/config.js";
 
 /* ---------- iconos (SVG inline, sin dependencias) ---------- */
 export function Icon({ name, size = 18, color = "currentColor" }) {

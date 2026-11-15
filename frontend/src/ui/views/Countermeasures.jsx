@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Card, Dot, Evidence, Icon } from "../components/ui.jsx";
-import { DB_METRIC, ECHO, TREATMENT_BY_GROUP, TREATMENTS, TIMEPOINTS, apiJson } from "../data/echo.js";
-import { HM, groupChange, heartState, fmt } from "../sim/heart.js";
-import { STATUS_LABEL } from "../data/config.js";
+import { DB_METRIC, ECHO, TREATMENT_BY_GROUP, TREATMENTS, TIMEPOINTS } from "../../data/echo.js";
+import { apiJson } from "../../data/api.js";
+import { HM, groupChange, heartState, fmt } from "../../domain/heart.js";
+import { STATUS_LABEL } from "../../domain/config.js";
 
 const KEYS = ["lvMass", "edv", "sv", "vti", "hr"];
 const COLORS = { Control: "#f43f5e", "Exercise A": "#22d3ee", "Exercise B": "#4ade80", Flywheel: "#a78bfa" };

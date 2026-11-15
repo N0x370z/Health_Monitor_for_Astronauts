@@ -1,5 +1,5 @@
 import { cloneElement } from "react";
-import { STATUS_COLOR, STATUS_LABEL } from "../data/config.js";
+import { STATUS_COLOR, STATUS_LABEL } from "../../domain/config.js";
 
 // Corazón holográfico (gradiente verde→azul como la pantalla de referencia) con cámaras clicables.
 // Late al ritmo cardíaco medido del sujeto.

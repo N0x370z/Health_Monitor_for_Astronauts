@@ -5,9 +5,9 @@ import { useState } from "react";
 import { Card, Icon, Dot, Evidence, NoData } from "../components/ui.jsx";
 import Heart from "../components/Heart.jsx";
 import TimelineChart from "../components/TimelineChart.jsx";
-import { TIMEPOINTS } from "../data/echo.js";
-import { STATUS_COLOR, STATUS_LABEL } from "../data/config.js";
-import { HM, fmt, reading, bestCountermeasure } from "../sim/heart.js";
+import { TIMEPOINTS } from "../../data/echo.js";
+import { STATUS_COLOR, STATUS_LABEL } from "../../domain/config.js";
+import { HM, fmt, reading, bestCountermeasure } from "../../domain/heart.js";
 
 const TABLE_KEYS = ["lvMass", "edv", "sv", "ef", "co", "hr", "vti", "fs", "ea", "ee", "tei", "rvS", "rvsp"];
 const FIND_ICON = { lvMass: "heartLine", edv: "heartLine", lvidd: "heartLine", sv: "activity", co: "activity", vti: "activity", hr: "activity", ef: "heartLine", fs: "heartLine", ee: "stetho", ea: "stetho", mDt: "stetho", tei: "activity", rvS: "stetho", rvsp: "stetho" };
