@@ -22,7 +22,7 @@ function Trend({ d, invert = false }) {
   );
 }
 
-function Kpis({ subject, tpKey, setTp, hs, playing, onPlay }) {
+function Kpis({ subject, tpKey, setTp, hs, playing, onPlay, live }) {
   const idx = TIMEPOINTS.findIndex((t) => t.key === tpKey);
   const tp = TIMEPOINTS[idx];
   const mass = reading(subject, tpKey, "lvMass");
@@ -61,12 +61,12 @@ function Kpis({ subject, tpKey, setTp, hs, playing, onPlay }) {
           <div className="ksub">{subject.treatment === "Control" ? <>Recommended: <b>{best}</b></> : mass.d != null ? <>LV mass <Trend d={mass.d} /> vs pre</> : <span className="err-val">LV mass: no data</span>}</div>
         </div>
       </div>
-      <div className={`kcard ${hr.v == null ? "k-err" : "k-purple"}`}>
+      <div className={`kcard ${live.hr == null ? "k-err" : "k-purple"}`}>
         <div className="kicon"><Icon name="activity" size={28} /></div>
         <div className="kbody">
-          <div className="klabel">Heart rate</div>
-          <div className="kval">{hr.v == null ? "Error" : `${fmt("hr", hr.v)} bpm`}</div>
-          <div className="ksub">{hr.v == null ? "Not measured at this timepoint" : hr.d != null ? <><Trend d={hr.d} invert /> vs pre</> : "Personal baseline"}</div>
+          <div className="klabel">Pulse · SpO₂ <span className="live-badge sm"><i />LIVE SIM</span></div>
+          <div className="kval">{live.hr == null ? "Error" : `${Math.round(live.hr)} bpm`} <span className="kval-2">· {Math.round(live.spo2)}%</span></div>
+          <div className="ksub">{live.hr == null ? "No heart rate in the database" : hr.v != null ? <>DB {fmt("hr", hr.v)} bpm · <Trend d={hr.d} invert /> vs pre</> : <span className="err-val">DB: not measured here · using nearest</span>}</div>
         </div>
       </div>
     </div>
@@ -229,13 +229,14 @@ function Coverage({ subject, tpKey }) {
       <span><b>{measured.length}/{TABLE_KEYS.length}</b> echo metrics measured at {TIMEPOINTS.find((t) => t.key === tpKey).label}</span>
       {missing.length > 0 && <span className="err-chip"><Icon name="alert" size={13} /> No data: {missing.map(name).join(", ")}</span>}
       <span className="err-chip"><Icon name="alert" size={13} /> Not in database: radiation, cabin air, SpO₂, blood pressure, temperature, sleep, mood</span>
+      <span className="sim-chip"><span className="live-badge sm"><i />LIVE</span> Pulse &amp; SpO₂ simulated every second · pulse starts from the DB value</span>
     </div>
   );
 }
 
 const CHART_MODES = [["all", "All"], ["size", "Size"], ["flow", "Flow"]];
 
-export default function HeartMonitor({ subject, tpKey, setTp, hs, findings, onSelectChamber, selectedChamber, onReport, playing, onPlay }) {
+export default function HeartMonitor({ subject, tpKey, setTp, hs, findings, onSelectChamber, selectedChamber, onReport, playing, onPlay, live }) {
   const [mode, setMode] = useState("all");
   const r = (k) => reading(subject, tpKey, k);
   const ef = r("ef"), co = r("co"), hr = r("hr");
@@ -243,19 +244,19 @@ export default function HeartMonitor({ subject, tpKey, setTp, hs, findings, onSe
   return (
     <>
       <Coverage subject={subject} tpKey={tpKey} />
-      <Kpis subject={subject} tpKey={tpKey} setTp={setTp} hs={hs} playing={playing} onPlay={onPlay} />
+      <Kpis subject={subject} tpKey={tpKey} setTp={setTp} hs={hs} playing={playing} onPlay={onPlay} live={live} />
 
       <div className="hm">
         <Card className="hm-heart navy" title="Cardiac status" icon={<Icon name="heartLine" />}
           right={<span className="card-sub" style={{ color: "#9fb3d6" }}>tap a region</span>}>
-          <Heart chambers={hs.chambers} selected={selectedChamber} onSelect={onSelectChamber} hr={hr.v} />
+          <Heart chambers={hs.chambers} selected={selectedChamber} onSelect={onSelectChamber} hr={live.hr} />
           <div className="heart-meta">
-            {[["EF", ef, "%"], ["CO", co, "L/min"], ["HR", hr, "bpm"]].map(([lab, x, u]) => (
+            {[["EF", ef, "%"], ["CO", co, "L/min"], ["Pulse", { k: "hr", v: live.hr, status: hr.status, live: true }, "bpm"], ["SpO₂", { k: "spo2", v: live.spo2, status: "ok", live: true }, "%"]].map(([lab, x, u]) => (
               <div key={lab}>
                 {x.v == null
                   ? <b style={{ color: "#fda29b" }}>Error</b>
-                  : <b>{fmt(x.k, x.v)}<small style={{ fontSize: 11, fontWeight: 600, color: "#9fb3d6", marginLeft: 3 }}>{u}</small></b>}
-                <span><Dot status={x.status === "none" ? "ok" : x.status} /> {lab}</span>
+                  : <b>{x.live ? Math.round(x.v) : fmt(x.k, x.v)}<small style={{ fontSize: 11, fontWeight: 600, color: "#9fb3d6", marginLeft: 3 }}>{u}</small></b>}
+                <span>{x.live ? <span className="live-dot" /> : <Dot status={x.status === "none" ? "ok" : x.status} />} {lab}</span>
               </div>
             ))}
           </div>

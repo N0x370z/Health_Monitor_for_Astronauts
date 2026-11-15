@@ -1,6 +1,8 @@
 // Drawer de sistema, modal de alerta y modal de reporte a la Tierra.
 import { useEffect, useState } from "react";
-import { Icon, Dot, Evidence } from "../components/ui.jsx";
+import { Icon, Dot, Evidence, Sparkline } from "../components/ui.jsx";
+import Ecg from "../components/Ecg.jsx";
+import { TIMEPOINTS } from "../data/echo.js";
 import { STATUS_LABEL, STATUS_COLOR } from "../data/config.js";
 
 function useEsc(onClose) {
@@ -11,7 +13,35 @@ function useEsc(onClose) {
   }, [onClose]);
 }
 
-export function SystemDrawer({ system: incoming, onClose }) {
+// Monitor en vivo (simulado) para "Rate & timing": ECG + pulso + SpO₂
+function LiveMonitor({ live }) {
+  const from = TIMEPOINTS.find((t) => t.key === live.baseFrom);
+  return (
+    <div className="live-mon">
+      <div className="live-head">
+        <span className="live-badge"><i />LIVE · SIMULATED</span>
+        <span>ECG · Lead II</span>
+      </div>
+      <Ecg hr={live.hr} />
+      <div className="live-tiles">
+        <div className="live-tile">
+          <span className="lt-lab"><span className="lt-heart" style={{ animationDuration: live.hr ? `${60 / live.hr}s` : "0s" }}>♥</span> Pulse</span>
+          <b className={live.hr == null ? "err-val" : ""}>{live.hr == null ? "Error" : Math.round(live.hr)}<small>{live.hr == null ? "" : "bpm"}</small></b>
+          <Sparkline data={live.hrHist} color="#4ade80" height={30} />
+          <small className="lt-src">{live.hr == null ? "No HR in the database for this subject" : `Starts at ${Math.round(live.base)} bpm · DB ${from?.label ?? ""}${live.exact ? "" : " (nearest)"}`}</small>
+        </div>
+        <div className="live-tile">
+          <span className="lt-lab">SpO₂</span>
+          <b style={{ color: "#67e8f9" }}>{Math.round(live.spo2)}<small>%</small></b>
+          <Sparkline data={live.spHist} color="#67e8f9" height={30} min={92} max={100} />
+          <small className="lt-src">Not in database · reference 98%</small>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SystemDrawer({ system: incoming, onClose, live }) {
   // Conserva el último contenido para animar la salida (slide out) antes de desmontar
   const [last, setLast] = useState(incoming);
   if (incoming && incoming !== last) setLast(incoming);
@@ -28,7 +58,9 @@ export function SystemDrawer({ system: incoming, onClose }) {
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, display: "flex", alignItems: "center", gap: 10 }}>
           <Dot status={system.status} />{system.name}
         </h2>
-        <div style={{ marginTop: 6, color: STATUS_COLOR[system.status], fontWeight: 700 }}>{STATUS_LABEL[system.status]} · score {system.score}/100</div>
+        <div style={{ marginTop: 6, color: STATUS_COLOR[system.status], fontWeight: 700 }}>{system.score == null ? "Error · no data at this timepoint" : `${STATUS_LABEL[system.status]} · score ${system.score}/100`}</div>
+
+        {system.key === "rhythm" && live && <><div className="section-title">Live monitor</div><LiveMonitor live={live} /></>}
 
         <div className="section-title">Indicators</div>
         {system.metrics.map(([k, v]) => <div className="kv" key={k}><span>{k}</span><b>{v}</b></div>)}
