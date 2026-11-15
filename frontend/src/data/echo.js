@@ -143,7 +143,7 @@ function derive(m) {
   const ePrime = mean([m.latE, m.sepE].filter((x) => x != null));
   m.ee = m.mE && ePrime ? m.mE / ePrime : null;
   m.tei = m.ict && m.ivrt && m.et ? (m.ict + m.ivrt) / m.et : null;
-  m.rvsp = m.tr ? 4 * (m.tr / 100) ** 2 + 5 : null;
+  m.rvsp = m.tr ? 4 * (m.tr / 100) ** 2 + 3 : null; // RAP 3 mmHg (Rudski 2010), igual que la base
 }
 
 export const ECHO = build();
