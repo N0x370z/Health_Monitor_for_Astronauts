@@ -494,3 +494,59 @@ svg [role="button"]:focus-visible text:first-of-type { text-decoration: underlin
 .live-tile b.err-val { color: #fda29b; }
 .lt-src { font-size: 10.5px; color: #7f97bd; }
 @media (prefers-reduced-motion: reduce) { .live-badge i, .live-dot, .lt-heart { animation: none; } }
+
+/* ---------- sujeto fijo (sin desplegable) ---------- */
+.side-name { color: #fff; font-weight: 600; font-size: 14px; }
+.mobile-subject { font-size: 13px; font-weight: 600; color: #dbe7ff; background: rgba(255,255,255,.1); padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+
+/* ---------- valores completados con la misma base ---------- */
+.etable td.filled { font-style: italic; }
+
+/* ---------- consejos: flechas + deslizamiento ---------- */
+.tip { touch-action: pan-y; animation: tipIn .3s ease; }
+@keyframes tipIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+.tip-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 12px; }
+.tip-nav .dots { margin-top: 0; }
+.tip-arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--primary-2); display: grid; place-items: center; cursor: pointer; transition: background .15s, transform .15s; }
+.tip-arrow:hover:not(:disabled) { background: #e9f2fe; transform: scale(1.06); }
+.tip-arrow:disabled { opacity: .4; cursor: default; }
+
+/* ---------- check-in: semana y medallas ---------- */
+.start-log { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: #eef5ff; color: var(--primary-2); margin-bottom: 14px; }
+.start-log b { display: block; color: var(--text); font-size: 14px; }
+.start-log span { font-size: 13px; color: var(--text-2); }
+.wk-row { display: grid; grid-template-columns: 74px 1fr; gap: 10px; align-items: end; margin-bottom: 10px; }
+.wk-lab { display: grid; font-size: 12px; color: var(--text-2); font-weight: 600; }
+.wk-lab b { font-size: 16px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.wk-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.wk-track { height: 42px; border-radius: 8px; background: var(--track, #eef2f7); position: relative; overflow: hidden; }
+.wk-col.today .wk-track { outline: 2px dashed #bfd3f5; outline-offset: 1px; }
+.wk-track i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 8px; transition: height .5s cubic-bezier(.2,.8,.2,1); }
+.wk-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-left: 84px; font-size: 10.5px; color: var(--text-3); text-align: center; }
+.wk-days .today { color: var(--primary-2); font-weight: 700; }
+.badge-sum { margin: 0 0 12px; font-size: 13px; color: var(--text-2); }
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.badge-item { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 14px; border: 1px solid var(--line); background: #f8fafc; filter: grayscale(1); opacity: .6; transition: all .3s; }
+.badge-item.on { filter: none; opacity: 1; background: #fff7e6; border-color: #fcd9a0; box-shadow: 0 4px 12px rgba(245,158,11,.15); }
+.badge-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: #fff; flex: none; }
+.badge-item b { display: block; font-size: 13px; }
+.badge-item small { font-size: 11px; color: var(--text-3); }
+
+/* ---------- tutorial guiado (coach marks) ---------- */
+.tour { position: fixed; inset: 0; z-index: 200; }
+.tour-catch { position: absolute; inset: 0; }
+.tour-spot { position: fixed; border-radius: 16px; box-shadow: 0 0 0 9999px rgba(8,15,30,.55), 0 0 0 2px #3b82f6, 0 0 18px 4px rgba(59,130,246,.45); pointer-events: none; transition: all .3s cubic-bezier(.2,.8,.2,1); }
+.tour-pop { position: fixed; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 14px; padding: 18px 20px; box-shadow: 0 18px 40px rgba(0,0,0,.35); animation: tourIn .25s ease; }
+.tour-pop::before { content: ""; position: absolute; left: calc(var(--ax) - 9px); width: 16px; height: 16px; background: #0d1117; border: 1px solid #30363d; transform: rotate(45deg); }
+.tour-pop.below::before { top: -9px; border-right: none; border-bottom: none; }
+.tour-pop.above::before { bottom: -9px; border-left: none; border-top: none; }
+.tour-kicker { font-size: 12px; color: #8b949e; font-weight: 600; margin-bottom: 6px; }
+.tour-pop h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; color: #fff; }
+.tour-pop p { margin: 0; font-size: 14px; line-height: 1.5; color: #9da7b3; }
+.tour-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+.tour-next { background: #21262d; color: #fff; border: 1px solid #3d444d; border-radius: 9px; padding: 8px 16px; font: 600 14px var(--font-body); cursor: pointer; }
+.tour-next:hover { background: #2b323b; }
+.tour-ghost { background: none; border: none; color: #e6edf3; font: 600 14px var(--font-body); padding: 8px 10px; cursor: pointer; border-radius: 9px; }
+.tour-ghost:hover { background: rgba(255,255,255,.06); }
+@keyframes tourIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .tour-pop, .tour-spot { animation: none; transition: none; } }

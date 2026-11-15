@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLiveVitals } from "./sim/live.js";
-import { loadCheckins, saveCheckins, TODAY } from "./sim/history.js";
+import { TODAY } from "./sim/history.js";
 import { ECHO, SUBJECT_IDS, TIMEPOINTS } from "./data/echo.js";
-import { heartState, findings, heartReport, HM, readingText } from "./sim/heart.js";
+import { heartState, findings, HM, readingText } from "./sim/heart.js";
 import { Icon, Dot } from "./components/ui.jsx";
 import HeartMonitor from "./views/HeartMonitor.jsx";
 import Countermeasures from "./views/Countermeasures.jsx";
 import CheckIn from "./views/CheckIn.jsx";
-import { SystemDrawer, ReportModal } from "./views/Panels.jsx";
+import { SystemDrawer } from "./views/Panels.jsx";
+import Tour from "./components/Tour.jsx";
 
 const TABS = [
   ["heart", "Heart monitor", "heartLine", "Heart"],
@@ -17,27 +18,15 @@ const TABS = [
 
 const DEFAULT_SUBJECT = ECHO.crewIds.includes("6546") ? "6546" : SUBJECT_IDS[0];
 
-function SubjectOptions() {
-  return (
-    <>
-      <optgroup label="Crew (7)">
-        {ECHO.crewIds.map((id) => <option key={id} value={id}>Subject {id}</option>)}
-      </optgroup>
-      <optgroup label="All study subjects">
-        {SUBJECT_IDS.filter((id) => !ECHO.subjects[id].crew).map((id) => <option key={id} value={id}>Subject {id}</option>)}
-      </optgroup>
-    </>
-  );
-}
-
 export default function App() {
   const [tab, setTab] = useState("heart");
-  const [history, setHistory] = useState(loadCheckins);
+  // Registro del astronauta solo en memoria: empieza vacío y se borra al recargar (demo)
+  const [history, setHistory] = useState([]);
+  const [person, setPerson] = useState(0); // cambia con cada persona nueva → reinicia el check-in
   const [subjectId, setSubjectId] = useState(DEFAULT_SUBJECT);
   const [tpKey, setTpKey] = useState("d70");
   const [playing, setPlaying] = useState(false);
   const [chamberKey, setChamberKey] = useState(null);
-  const [report, setReport] = useState(null);
   const [lastRandom, setLastRandom] = useState(null);
   const [spin, setSpin] = useState(false);
 
@@ -65,7 +54,6 @@ export default function App() {
     const row = { ...entry, day: TODAY, done: true };
     const next = [...history.filter((d) => d.day !== TODAY), row];
     setHistory(next);
-    saveCheckins(next);
   };
 
   const play = () => {
@@ -81,8 +69,9 @@ export default function App() {
     evidence: ["echoAll", "echo3d"],
   };
 
-  const openSubject = (id) => { setSubjectId(id); setTpKey("d70"); setTab("heart"); };
-  const openReport = () => setReport(heartReport(subject, tpKey, hs, fnd));
+  // Otra persona: el registro diario empieza de cero
+  const newPerson = () => { setHistory([]); setPerson((p) => p + 1); };
+  const openSubject = (id) => { if (id !== subjectId) newPerson(); setSubjectId(id); setTpKey("d70"); setTab("heart"); };
 
   // Carga aleatoria: un sujeto y un momento del estudio que existan en los CSV
   const randomSample = () => {
@@ -92,6 +81,7 @@ export default function App() {
     const t = tps[Math.floor(Math.random() * tps.length)];
     setPlaying(false);
     setSubjectId(id);
+    newPerson();
     setTpKey(t.key);
     setTab("heart");
     setChamberKey(null);
@@ -117,7 +107,7 @@ export default function App() {
           <p>Astronaut health manager</p>
         </div>
         {TABS.map(([k, label, icon]) => (
-          <button key={k} className={`nav-item ${tab === k ? "active" : ""}`} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
+          <button key={k} data-tour={`tab-${k}`} className={`nav-item ${tab === k ? "active" : ""}`} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
             <Icon name={icon} size={20} />{label}
             {k === "checkin" && !today?.done && <Dot status="warn" />}
           </button>
@@ -126,23 +116,17 @@ export default function App() {
           <div className="side-user">
             <div className="avatar">{subject.id.slice(0, 2)}</div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <select value={subjectId} onChange={(e) => openSubject(e.target.value)} aria-label="Crew member">
-                <SubjectOptions />
-              </select>
+              <div className="side-name">Subject {subject.id}</div>
               <small>{subject.treatment}{subject.crew ? " · crew" : ""}</small>
             </div>
-            <Icon name="chevron" size={16} color="#9fb3d6" />
           </div>
-          <button className="side-link" onClick={openReport}><Icon name="send" size={18} /> Report to flight surgeon</button>
         </div>
       </aside>
 
       {/* ---------- barra superior (móvil) ---------- */}
       <header className="mobile-top navy">
         <span className="brand-row"><Icon name="brandHeart" size={30} /> Orbit Care</span>
-        <select value={subjectId} onChange={(e) => openSubject(e.target.value)} aria-label="Crew member">
-          <SubjectOptions />
-        </select>
+        <span className="mobile-subject">Subject {subject.id} · {subject.treatment}</span>
       </header>
 
       <div className="main">
@@ -152,7 +136,7 @@ export default function App() {
             <p>{HEAD[1]}</p>
           </div>
           <div className="head-actions">
-            <button className={`random-btn ${spin ? "spin" : ""}`} onClick={randomSample} title="Load a random subject and timepoint from the CFT70 database">
+            <button data-tour="random" className={`random-btn ${spin ? "spin" : ""}`} onClick={randomSample} title="Load a random subject and timepoint from the CFT70 database">
               <Icon name="dice" size={22} /><span>Random data</span>
             </button>
             <small aria-live="polite">{lastRandom ? `Loaded: ${lastRandom}` : "From the CFT70 echo database"}</small>
@@ -162,25 +146,25 @@ export default function App() {
         <main>
           {tab === "heart" && (
             <HeartMonitor subject={subject} tpKey={tpKey} setTp={(k) => { setPlaying(false); setTpKey(k); }} hs={hs} findings={fnd}
-              onSelectChamber={setChamberKey} selectedChamber={chamberKey} onReport={openReport} playing={playing} onPlay={play} live={live} />
+              onSelectChamber={setChamberKey} selectedChamber={chamberKey} playing={playing} onPlay={play} live={live} />
           )}
           {tab === "counter" && <Countermeasures onOpenSubject={openSubject} />}
-          {tab === "checkin" && <CheckIn history={history} onSubmit={submitCheckin} />}
+          {tab === "checkin" && <CheckIn key={person} history={history} onSubmit={submitCheckin} />}
         </main>
       </div>
 
       {/* ---------- navegación inferior (móvil) ---------- */}
       <nav className="mobile-nav" aria-label="Sections">
         {TABS.map(([k, , icon, short]) => (
-          <button key={k} className={tab === k ? "active" : ""} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
+          <button key={k} data-tour={`tab-${k}`} className={tab === k ? "active" : ""} onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}>
             <Icon name={icon} size={22} />{short}
             {k === "checkin" && !today?.done && <Dot status="warn" />}
           </button>
         ))}
       </nav>
 
+      <Tour onStart={() => setTab("heart")} />
       <SystemDrawer system={drawerData} onClose={() => setChamberKey(null)} live={live} />
-      {report != null && <ReportModal text={report} delay="next comm window" onClose={() => setReport(null)} />}
     </div>
   );
 }

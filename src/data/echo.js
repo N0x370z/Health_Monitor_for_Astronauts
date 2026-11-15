@@ -129,7 +129,40 @@ function build() {
     s.treatment ??= "Unassigned";
     for (const m of Object.values(s.tp)) derive(m);
   }
+  fill(subjects);
   return { subjects, crewIds };
+}
+
+// Relleno de huecos con datos de la MISMA base: para cada métrica que falte en un momento del estudio
+// se usa (1) el valor del mismo sujeto en el momento medido más cercano; si el sujeto nunca la midió,
+// (2) la media de su grupo de tratamiento en ese momento; (3) la media de todos los sujetos.
+// `raw` conserva los datos originales (para la evidencia por grupos); `filled[tp][k]` dice de dónde salió cada valor.
+function fill(subjects) {
+  const list = Object.values(subjects);
+  const keys = [...new Set(list.flatMap((s) => Object.values(s.tp).flatMap((m) => Object.keys(m))))].filter((k) => k !== "note3d");
+  for (const s of list) s.raw = structuredClone(s.tp);
+  const avg = (subs, tp, k) => mean(subs.map((x) => x.raw[tp]?.[k]).filter((v) => v != null));
+  const avgAny = (subs, k) => mean(subs.flatMap((x) => Object.values(x.raw).map((m) => m[k])).filter((v) => v != null));
+  for (const s of list) {
+    s.filled = {};
+    const group = list.filter((x) => x.treatment === s.treatment && s.treatment !== "Unassigned");
+    TIMEPOINTS.forEach((t, i) => {
+      const m = (s.tp[t.key] ??= {});
+      const f = (s.filled[t.key] = {});
+      for (const k of keys) {
+        if (m[k] != null) continue;
+        const near = TIMEPOINTS.map((u, j) => ({ u, dist: Math.abs(j - i) + (j > i ? 0.5 : 0) }))
+          .filter(({ u }) => s.raw[u.key]?.[k] != null)
+          .sort((a, b) => a.dist - b.dist)[0];
+        let v = null, from = null;
+        if (near) { v = s.raw[near.u.key][k]; from = `${near.u.label} (same subject)`; }
+        if (v == null && group.length) { v = avg(group, t.key, k); from = `${s.treatment} group mean`; }
+        if (v == null) { v = avg(list, t.key, k); from = "all-subject mean"; }
+        if (v == null) { v = avgAny(list, k); from = "study mean"; }
+        if (v != null) { m[k] = v; f[k] = from; }
+      }
+    });
+  }
 }
 
 // Métricas derivadas (fórmulas estándar de ecocardiografía)

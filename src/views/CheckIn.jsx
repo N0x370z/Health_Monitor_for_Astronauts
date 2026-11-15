@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Card, Icon, Sparkline, NoData } from "../components/ui.jsx";
-import { DATA_ONLY } from "../data/config.js";
+import { Card, Icon } from "../components/ui.jsx";
 import { MoodFace, Emoji } from "../components/Emoji.jsx";
 import { streak, TODAY } from "../sim/history.js";
 
@@ -19,6 +18,67 @@ function guidance(e) {
   return g;
 }
 
+// Últimos 7 días del registro (vacíos hasta que el astronauta guarde su check-in)
+const WEEK = Array.from({ length: 7 }, (_, i) => TODAY - 6 + i);
+const TRACKS = [
+  ["mood", "Mood", 5, "#14b8a6", (v) => `${v}/5`],
+  ["sleep", "Sleep", 10, "#6366f1", (v) => `${v} h`],
+  ["stress", "Stress", 5, "#f59e0b", (v) => `${v}/5`],
+];
+
+function Week({ history }) {
+  const by = Object.fromEntries(history.map((d) => [d.day, d]));
+  const today = by[TODAY];
+  return (
+    <>
+      {!today && (
+        <div className="start-log"><Icon name="pen" size={18} /><div><b>Start your log today</b><span>Save your first check-in and your mood, sleep and stress will appear here.</span></div></div>
+      )}
+      {TRACKS.map(([k, label, max, color, fmtV]) => (
+        <div className="wk-row" key={k}>
+          <div className="wk-lab"><span>{label}</span><b style={{ color: today ? color : undefined }}>{today ? fmtV(today[k]) : "—"}</b></div>
+          <div className="wk-bars">
+            {WEEK.map((d) => {
+              const v = by[d]?.[k];
+              return (
+                <div key={d} className={`wk-col ${d === TODAY ? "today" : ""}`} title={v != null ? `Day ${d}: ${fmtV(v)}` : `Day ${d}: no entry`}>
+                  <div className="wk-track"><i style={{ height: v != null ? `${Math.max(8, (v / max) * 100)}%` : 0, background: color }} /></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <div className="wk-days">{WEEK.map((d) => <span key={d} className={d === TODAY ? "today" : ""}>{d === TODAY ? "Today" : `D${d}`}</span>)}</div>
+    </>
+  );
+}
+
+function Badges({ history, st }) {
+  const today = history.find((d) => d.day === TODAY);
+  const list = [
+    ["flame", "First log", !!today, "Save your first check-in"],
+    ["satellite", `Week in orbit · ${Math.min(st, 7)}/7`, st >= 7, "Log 7 days in a row"],
+    ["moon", "Sleep keeper", (today?.sleep ?? 0) >= 7, "Sleep 7 h or more"],
+    ["sun", "Good vibes", (today?.mood ?? 0) >= 4, "Feel good or great"],
+    ["muscle", "Calm & strong", !!today && today.stress <= 2 && today.energy >= 4, "Low stress, high energy"],
+  ];
+  const earned = list.filter((b) => b[2]).length;
+  return (
+    <>
+      <p className="badge-sum">{today ? <><b>{earned}</b> of {list.length} badges earned today — keep logging to unlock the rest.</> : <>Start your log to earn badges. Your first check-in unlocks <b>First log</b>.</>}</p>
+      <div className="badge-grid">
+        {list.map(([icon, name, on, how]) => (
+          <div key={name} className={`badge-item ${on ? "on" : ""}`} title={how}>
+            <span className="badge-ico"><Emoji name={icon} size={24} /></span>
+            <div><b>{name}</b><small>{on ? "Unlocked" : how}</small></div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 function Slider({ label, hint, value, onChange, min = 1, max = 5, step = 1, fmt = (v) => `${v}/5` }) {
   return (
     <div className="field">
@@ -35,12 +95,11 @@ export default function CheckIn({ history, onSubmit }) {
   const [sent, setSent] = useState(!!today?.done);
   const set = (k) => (v) => { setE((x) => ({ ...x, [k]: v })); setSent(false); };
   const toggle = (s) => set("symptoms")(e.symptoms.includes(s) ? e.symptoms.filter((x) => x !== s) : [...e.symptoms, s]);
-  const st = streak(history) + (today?.done ? 0 : 0);
-  const last7 = history.slice(-7);
+  const st = streak(history);
 
   return (
     <div className="two">
-      <Card title={`Daily check-in · Day ${TODAY}`} icon={<Icon name="pen" />} right={DATA_ONLY ? <span className="chip">Manual entry · not in study database</span> : <span className="chip"><Emoji name="flame" size={14} /> {st} day streak</span>}>
+      <Card title={`Daily check-in · Day ${TODAY}`} icon={<Icon name="pen" />} right={<span className="chip"><Emoji name="flame" size={14} /> {st ? `${st}-day streak` : "Start your streak"}</span>}>
         <div className="field">
           <label>How do you feel today?</label>
           <div className="moods" role="radiogroup" aria-label="Mood">
@@ -66,7 +125,7 @@ export default function CheckIn({ history, onSubmit }) {
         </div>
         <div style={{ display: "flex", gap: 10, marginTop: 18, alignItems: "center" }}>
           <button className="btn primary" onClick={() => { onSubmit(e); setSent(true); }}>{today?.done ? "Update check-in" : "Save check-in"}</button>
-          {sent && <span className="c-ok" style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}><Icon name="tick" size={16} /> Saved locally (offline)</span>}
+          {sent && <span className="c-ok" style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}><Icon name="tick" size={16} /> Saved — see your week and badges</span>}
         </div>
       </Card>
 
@@ -76,31 +135,8 @@ export default function CheckIn({ history, onSubmit }) {
             <div className="insight" key={text}><span className={`dot ${s}`} style={{ marginTop: 6 }} /><span>{text}</span></div>
           ))}
         </Card>
-        {DATA_ONLY ? (
-          <>
-            <Card title="Last 7 days" icon={<Icon name="chart" />}><NoData what="Mood, sleep and stress history are not recorded in the CFT70 echo database." /></Card>
-            <Card title="Badges" icon={<Icon name="list" />}><NoData what="Streaks and badges need a daily log history, which the database does not contain." /></Card>
-          </>
-        ) : (
-          <>
-            <Card title="Last 7 days">
-          <div className="muted">Mood</div>
-          <Sparkline data={last7.map((d) => d.mood)} min={1} max={5} color="var(--teal)" height={36} />
-          <div className="muted" style={{ marginTop: 8 }}>Sleep (h)</div>
-          <Sparkline data={last7.map((d) => d.sleep)} min={3} max={9} color="var(--indigo)" height={36} threshold={6} />
-          <div className="muted" style={{ marginTop: 8 }}>Stress</div>
-          <Sparkline data={last7.map((d) => d.stress)} min={1} max={5} color="var(--warn)" height={36} />
-        </Card>
-            <Card title="Badges">
-          <div className="chips">
-            <span className="tog on badge"><Emoji name="flame" /> {st}-day streak</span>
-            <span className={`tog badge ${st >= 7 ? "on" : ""}`}><Emoji name="satellite" /> Week in orbit</span>
-            <span className={`tog badge ${last7.filter((d) => d.sleep >= 7).length >= 3 ? "on" : ""}`}><Emoji name="moon" /> Sleep keeper</span>
-            <span className={`tog badge ${last7.every((d) => (d.exerciseMin || 0) >= 90) ? "on" : ""}`}><Emoji name="muscle" /> Bone guardian</span>
-          </div>
-        </Card>
-          </>
-        )}
+        <Card title="Last 7 days" icon={<Icon name="chart" />}><Week history={history} /></Card>
+        <Card title="Badges" icon={<Icon name="list" />}><Badges history={history} st={st} /></Card>
       </div>
     </div>
   );

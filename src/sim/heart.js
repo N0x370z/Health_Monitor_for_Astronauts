@@ -165,7 +165,7 @@ export function groupChange(k, tpKey = "d70") {
   for (const t of TREATMENTS) {
     const ds = Object.values(ECHO.subjects)
       .filter((s) => s.treatment === t)
-      .map((s) => delta(s.tp[tpKey]?.[k], s.tp.pre?.[k]))
+      .map((s) => delta(s.raw[tpKey]?.[k], s.raw.pre?.[k])) // solo datos originales
       .filter((d) => d != null);
     out[t] = { n: ds.length, mean: ds.length ? ds.reduce((a, b) => a + b, 0) / ds.length : null };
   }

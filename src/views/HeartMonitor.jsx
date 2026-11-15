@@ -39,7 +39,7 @@ function Kpis({ subject, tpKey, setTp, hs, playing, onPlay, live }) {
           <div className="ksub">{hs.score == null ? "No echo data at this timepoint" : <>Score <b>{hs.score}</b>/100 · {hs.measured}/5 regions measured</>}</div>
         </div>
       </div>
-      <div className="kcard k-blue">
+      <div className="kcard k-blue" data-tour="timeline">
         <div className="kicon"><Icon name="calendar" size={28} /></div>
         <div className="kbody">
           <div className="klabel">Study timepoint</div>
@@ -61,7 +61,7 @@ function Kpis({ subject, tpKey, setTp, hs, playing, onPlay, live }) {
           <div className="ksub">{subject.treatment === "Control" ? <>Recommended: <b>{best}</b></> : mass.d != null ? <>LV mass <Trend d={mass.d} /> vs pre</> : <span className="err-val">LV mass: no data</span>}</div>
         </div>
       </div>
-      <div className={`kcard ${live.hr == null ? "k-err" : "k-purple"}`}>
+      <div className={`kcard ${live.hr == null ? "k-err" : "k-purple"}`} data-tour="pulse">
         <div className="kicon"><Icon name="activity" size={28} /></div>
         <div className="kbody">
           <div className="klabel">Pulse · SpO₂ <span className="live-badge sm"><i />LIVE SIM</span></div>
@@ -138,11 +138,21 @@ function Tips({ chambers }) {
   const tips = [...chambers].filter((c) => c.score != null).sort((a, b) => a.score - b.score).slice(0, 3)
     .map((c) => ({ title: c.actions[0], body: c.why.split(". ")[0] + ".", chamber: c.name, status: c.status }));
   const [i, setI] = useState(0);
+  const [x0, setX0] = useState(null);
   const t = tips[i];
   if (!t) return <NoData what="No measured heart region at this timepoint to base a tip on." />;
+  const go = (d) => setI((k) => (k + d + tips.length) % tips.length);
+  // Deslizar en móvil
+  const onTouchStart = (e) => setX0(e.touches[0].clientX);
+  const onTouchEnd = (e) => {
+    if (x0 == null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+    setX0(null);
+  };
   return (
     <>
-      <div className="tip">
+      <div className="tip" key={i} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="tip-art"><Icon name={TIP_ART[i]} size={50} color="var(--primary-2)" /></div>
         <div>
           <span className={`c-${t.status}`} style={{ fontSize: 12, fontWeight: 700 }}>{t.chamber}</span>
@@ -150,8 +160,12 @@ function Tips({ chambers }) {
           <p>{t.body}</p>
         </div>
       </div>
-      <div className="dots" role="tablist" aria-label="Tips">
-        {tips.map((_, k) => <button key={k} className={k === i ? "on" : ""} onClick={() => setI(k)} aria-label={`Tip ${k + 1}`} aria-selected={k === i} role="tab" />)}
+      <div className="tip-nav">
+        <button className="tip-arrow" onClick={() => go(-1)} aria-label="Previous tip" disabled={tips.length < 2}><Icon name="chevronL" size={18} /></button>
+        <div className="dots" role="tablist" aria-label="Tips">
+          {tips.map((_, k) => <button key={k} className={k === i ? "on" : ""} onClick={() => setI(k)} aria-label={`Tip ${k + 1}`} aria-selected={k === i} role="tab" />)}
+        </div>
+        <button className="tip-arrow" onClick={() => go(1)} aria-label="Next tip" disabled={tips.length < 2}><Icon name="chevron" size={18} /></button>
       </div>
     </>
   );
@@ -204,8 +218,9 @@ function EchoTable({ subject, tpKey, onSelectTp }) {
               {TIMEPOINTS.map((t) => {
                 const v = subject.tp[t.key]?.[k];
                 const s = v == null ? "err" : reading(subject, t.key, k).status;
+                const src = subject.filled[t.key]?.[k];
                 return (
-                  <td key={t.key} className={`cell s-${s} ${t.key === tpKey ? "cur" : ""}`} onClick={() => onSelectTp(t.key)} title={v == null ? "Error: not in the database" : undefined}>
+                  <td key={t.key} className={`cell s-${s} ${src ? "filled" : ""} ${t.key === tpKey ? "cur" : ""}`} onClick={() => onSelectTp(t.key)} title={src ? `Completed from ${src}` : v == null ? "Error: not in the database" : undefined}>
                     {v == null ? "ERR" : fmt(k, v)}
                   </td>
                 );
@@ -218,32 +233,15 @@ function EchoTable({ subject, tpKey, onSelectTp }) {
   );
 }
 
-// Qué puede medir la base en este punto (y qué no está en la base en absoluto)
-function Coverage({ subject, tpKey }) {
-  const measured = TABLE_KEYS.filter((k) => subject.tp[tpKey]?.[k] != null);
-  const missing = TABLE_KEYS.filter((k) => subject.tp[tpKey]?.[k] == null);
-  const name = (k) => HM[k].short ?? HM[k].label;
-  return (
-    <div className="data-strip" role="status">
-      <Icon name="database" size={18} color="var(--primary)" />
-      <span><b>{measured.length}/{TABLE_KEYS.length}</b> echo metrics measured at {TIMEPOINTS.find((t) => t.key === tpKey).label}</span>
-      {missing.length > 0 && <span className="err-chip"><Icon name="alert" size={13} /> No data: {missing.map(name).join(", ")}</span>}
-      <span className="err-chip"><Icon name="alert" size={13} /> Not in database: radiation, cabin air, SpO₂, blood pressure, temperature, sleep, mood</span>
-      <span className="sim-chip"><span className="live-badge sm"><i />LIVE</span> Pulse &amp; SpO₂ simulated every second · pulse starts from the DB value</span>
-    </div>
-  );
-}
-
 const CHART_MODES = [["all", "All"], ["size", "Size"], ["flow", "Flow"]];
 
-export default function HeartMonitor({ subject, tpKey, setTp, hs, findings, onSelectChamber, selectedChamber, onReport, playing, onPlay, live }) {
+export default function HeartMonitor({ subject, tpKey, setTp, hs, findings, onSelectChamber, selectedChamber, playing, onPlay, live }) {
   const [mode, setMode] = useState("all");
   const r = (k) => reading(subject, tpKey, k);
   const ef = r("ef"), co = r("co"), hr = r("hr");
 
   return (
     <>
-      <Coverage subject={subject} tpKey={tpKey} />
       <Kpis subject={subject} tpKey={tpKey} setTp={setTp} hs={hs} playing={playing} onPlay={onPlay} live={live} />
 
       <div className="hm">
@@ -263,9 +261,9 @@ export default function HeartMonitor({ subject, tpKey, setTp, hs, findings, onSe
         </Card>
 
         <Card className="hm-find" title="Findings" icon={<Icon name="list" />}
-          right={<button className="card-link" onClick={onReport}>Full report <Icon name="arrowR" size={14} /></button>}>
+>
           <FindingsList findings={findings} subject={subject} />
-          {findings.length > 3 && <p className="muted" style={{ margin: "8px 0 0" }}>+{findings.length - 3} more in the full report</p>}
+          {findings.length > 3 && <p className="muted" style={{ margin: "8px 0 0" }}>+{findings.length - 3} more findings — tap a heart region for details</p>}
         </Card>
 
         <Card className="hm-chart" title="Your metrics" icon={<Icon name="chart" />}>
