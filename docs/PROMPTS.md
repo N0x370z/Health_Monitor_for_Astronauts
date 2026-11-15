@@ -50,6 +50,7 @@ Prompts que funcionaron bien al construir este proyecto con un asistente de IA, 
 - *"Prepara el despliegue en Vercel con la API en el mismo dominio y comprueba en producción que cada ruta responda."*
 
 ## 7. Documentación
+- *"Haz un reporte final de todo el proyecto con el formato de Computer Science (resumen, introducción, trabajo relacionado, datos, arquitectura, métodos, implementación, resultados, limitaciones, conclusión y referencias) y guárdalo también en el repositorio."*
 - *"Documenta de manera formal qué se hizo: objetivo, método por fases, decisiones, validación, limitaciones y bitácora de cambios."*
 - *"Cita y declara las fuentes: qué datos son reales, cuáles son sintéticos, cómo citar cada registro y qué umbrales son heurísticas del proyecto."*
 - *"Documenta los archivos del repositorio y los cambios de esta versión."*

@@ -162,6 +162,12 @@ The heart-rate rise at R+0 is used as a proxy of orthostatic stress, because CFT
 ### 5.4 Correlations (`/api/analytics/correlations`)
 Pearson and Spearman correlation matrix of the % changes, with Benjamini-Hochberg q values. At D70, 3 of 36 pairs are significant: stroke volume with LVEDV (r = 0.92), heart rate with cardiac output (r = 0.76) and stroke volume with cardiac output (r = 0.50).
 
+### 5.4b Early-warning validation and trend alarm (`/api/analytics/early-warning`)
+Does the day-7 change anticipate a real LV-mass loss at day 70 (event = loss ≥ MDC95, 6.5 %)? `backend/src/services/mining.js` and `analytics.js` (`earlyWarningValidation`, `trajectoryAlarm`):
+- **Discrimination:** AUC 0.73 (bootstrap 95 % CI 0.54–0.89), permutation p = 0.009; n = 35, 19 events.
+- **Out of sample:** ridge logistic regression evaluated leaving one subject out: AUC 0.67, Brier skill 0.09 (better than predicting the prevalence), sensitivity 0.68, specificity 0.50. Adding the exercise group: AUC 0.68, Brier skill 0.09.
+- **Trend alarm:** CUSUM of the change in units of measurement error, using only data up to the queried timepoint. A sustained decline adds a `trend` recommendation at **warning** level (the signal is modest, so never critical).
+
 ### 5.5 Response phenotypes (`/api/analytics/phenotypes`)
 k-means++ (50 restarts, fixed seed) on the standardized D70 changes of LV mass, stroke volume, LVOT VTI, heart rate and E/A. Each subject also gets a **deconditioning index**: the mean z-score with the adverse sign, where 0 is the study average and positive is worse.
 

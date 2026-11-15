@@ -1,13 +1,16 @@
 # Health Monitor for Astronauts
 
-> Cardiovascular health monitoring for astronauts on space missions, built on real NASA data and a shared database.
+> Cardiovascular and bone health monitoring for astronauts on space missions, built on real NASA data and a shared database.
 
-Away from Earth's gravity the heart changes. Fluids shift to the head, plasma volume falls, the heart pumps less blood per beat and loses muscle mass. On returning to gravity, astronauts may faint when they stand up. NASA's 70-day bed rest study (CFT70) shows it clearly: without exercise, left ventricular mass fell **13.7 %** and stroke volume **14.3 %**, and heart rate rose **51 %** on getting up. With exercise countermeasures, those losses were much smaller.
+Away from Earth's gravity the heart changes. Fluids shift to the head, plasma volume falls, the heart pumps less blood per beat and loses muscle mass. On returning to gravity, astronauts may faint when they stand up. NASA's 70-day bed rest study (CFT70) shows it clearly: without exercise, left ventricular mass fell **13.7 %** and stroke volume **14.3 %**, and heart rate rose **51 %** on getting up. With exercise countermeasures, those losses were much smaller. Bones that carry weight also lose density: in NASA bed rest DXA scans the total hip lost **2.8 %**, while the forearm did not change.
 
 Our goal is to **detect these problems early and prevent them**. The monitor follows the 37 real CFT70 subjects through their echocardiography sessions (before, during and after 70 days of bed rest). It turns each session into:
 - a cardiac score by heart region;
 - alerts with a concrete recommended action and countermeasure;
-- evidence from the study itself about what protects the heart.
+- evidence from the study itself about what protects the heart;
+- a bone-density view of 74 bed-rest subjects: which skeletal structures lose density and by how much, against the scanner's error.
+
+> **Final technical report** (computer-science paper format: abstract, method, architecture, results, limitations, references): [`docs/FINAL_REPORT.md`](docs/FINAL_REPORT.md)
 
 > **Note:** No hardware is used. All data comes from NASA datasets stored in the project database. This is an educational prototype, not a medical device.
 
@@ -25,6 +28,7 @@ The ORBIT CARE web app shows the heart monitor, countermeasures (with the backen
 - **Data mining:**
   - reliability of the 3D echo between analysts and the minimum detectable change;
   - early predictors (day 7 → day 70, day 70 → return);
+  - early-warning validation out of sample (AUC with bootstrap CI, permutation test, leave-one-subject-out) and a CUSUM trend alarm;
   - correlations between changes;
   - response phenotypes (k-means++).
 - **Problems and prevention:** the 7 cardiovascular problems of spaceflight, why they happen, what the data shows and how to prevent them.
@@ -80,6 +84,7 @@ The database lives in the same repository (`data/`). The backend reads it direct
 - **Monitoring, scoring and data mining:** [`docs/CARDIOVASCULAR_MONITORING.md`](docs/CARDIOVASCULAR_MONITORING.md)
 - **Sources and citations:** [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md)
 - **Method and work record:** [`docs/DATA_METHODOLOGY.md`](docs/DATA_METHODOLOGY.md)
+- **Final technical report:** [`docs/FINAL_REPORT.md`](docs/FINAL_REPORT.md)
 - **Glossary (terms and abbreviations used in the app):** [`docs/GLOSSARY.md`](docs/GLOSSARY.md)
 - **Bone density data and analysis:** [`docs/BONE_DENSITY.md`](docs/BONE_DENSITY.md)
 
@@ -87,6 +92,7 @@ The database lives in the same repository (`data/`). The backend reads it direct
 - **Exercise protects the heart.** Every protocol lost less LV mass than Control. Exercise B vs Control: Hedges' g 1.21, p = 0.011. The differences between protocols are not significant.
 - **A normal cardiac output can hide deconditioning.** Heart rate rises and compensates for the lower stroke volume.
 - **LVOT VTI is the strongest single signal** (Doppler 2D, g = 2.18).
+- **Day 7 already warns.** The LV-mass change at day 7 anticipates a real loss at day 70 (AUC 0.73, permutation p = 0.009; leave-one-subject-out AUC 0.67), so a sustained decline raises a trend warning.
 - **The end-of-mission echo predicts trouble on return.** A lower E/A, LVOT VTI or LV mass at day 70 predicts a larger heart-rate jump on getting up (r = −0.47 to −0.61).
 - **Measurement error matters.** LV mass changes under ~6.5 % cannot be told apart from analyst reading error, so they do not raise alerts.
 - **Bone is lost where it carries weight.** After about 60 days of bed rest: total hip −2.8 %, intertrochanteric −3.0 %, trochanter −2.6 %, pelvis −2.1 %, heel −1.8 % (all p < 0.05). The forearm and arms do not change. The total hip is the most reliable structure to follow: 63 % of subjects lost more than the scanner's least significant change (2.3 %).
@@ -159,6 +165,7 @@ All endpoints are `GET` and return JSON. Timepoints accept `Pre, D7, D21, D30, D
 | `/api/analytics/correlations?timepoint=` | Correlations between changes (Pearson, Spearman, Benjamini-Hochberg) |
 | `/api/analytics/predictors` | Early predictors: D7 → D70 losses, D70 → heart-rate rise at R+0 |
 | `/api/analytics/phenotypes?k=2` | Response phenotypes (k-means++) and deconditioning index |
+| `/api/analytics/early-warning` | Out-of-sample validation of the day-7 warning: AUC with bootstrap CI, permutation p, leave-one-subject-out ridge logistic regression, Brier skill |
 | `/api/bone` | Bone density: campaigns, parameters, regions with bone loss (CI, p, standardized response, % beyond the LSC) and the ranking of the most affected regions |
 | `/api/bone/subjects?campaign=` · `/api/bone/subjects/:code` | Bone subjects; one subject's DXA timeline by region with % change from PRE and status (loss / stable / gain) |
 | `/api/problems` · `/api/problems/:code` | Cardiovascular problems with countermeasures, rules and NASA evidence |
@@ -170,7 +177,7 @@ All endpoints are `GET` and return JSON. Timepoints accept `Pre, D7, D21, D30, D
 ├── backend/       # Node.js API (src/routes, src/services, test/)
 ├── frontend/      # ORBIT CARE (React + Vite) in layers: app / ui / domain / data; Vercel API function (api/)
 ├── data/          # health_monitor.sqlite, schema.sql, queries.sql
-├── docs/          # monitoring logic, sources, methodology, files and changes, prompts
+├── docs/          # final report, monitoring logic, bone density, sources, methodology, glossary, files and changes, prompts
 └── README.md
 ```
 
@@ -179,6 +186,8 @@ Full map and change history: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGE
 ## Changelog
 
 ### v5: bone density
+- **Final report** in computer-science paper format: [`docs/FINAL_REPORT.md`](docs/FINAL_REPORT.md), with the architecture diagram and the bone-loss chart in `docs/report/`.
+- **Early warning (Erik, PR #2):** `/api/analytics/early-warning` validates the day-7 signal out of sample (`services/mining.js`: AUC with bootstrap CI, permutation test, leave-one-subject-out ridge logistic regression, Brier score, CUSUM, shrinkage Mahalanobis distance); a CUSUM trend alarm adds a `trend` recommendation (warning level).
 - **Frontend:** new Bone density screen (which bones lose density, what to watch, subject timeline), a guided tour per screen in the app's palette, and the code organized in layers (`app/`, `ui/`, `domain/`, `data/`). Merged ORBIT CARE v2.2 (check-in with week and badges, health-tip arrows, gap filling marked in italics) and Erik's early-warning validation (`/api/analytics/early-warning`). Fixed: the echo table failed when the data came from the API, and the heart-rate chart in Countermeasures asked the API for an unknown metric.
 - Ordered the NASA MR035G DXA files (1,064 files, 4 bed rest campaigns) into one set of tables in the project database: `bone_campaign`, `bone_subject`, `bone_region`, `bone_parameter`, `bone_measurement` and the view `v_bone_visit`.
 - Kept only what is needed to assess bone loss (BMD, BMC, T-score, Z-score at 11 regions). Removed personal fields, absolute dates, body composition and duplicated scans (38,493 → 19,727 rows).
@@ -247,6 +256,7 @@ Full details: [`docs/FILES_AND_CHANGES.md`](docs/FILES_AND_CHANGES.md) and [`doc
 ## Future Work
 
 - Show more of the API in ORBIT CARE (score by region, predictors, phenotypes, early warning)
+- Model bone recovery from the 6-month and 1-year follow-up DXA scans
 - Daily check-in storage (requires a write path; the database is read-only today)
 - Validation of the score on an independent cohort or spaceflight data
 - Medical review of the heuristic thresholds, region weights and score bands

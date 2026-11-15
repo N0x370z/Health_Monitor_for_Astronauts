@@ -97,6 +97,10 @@ Terms and abbreviations needed to read the ORBIT CARE web app. Attention / Criti
 | **Welch t-test** | Test that compares two groups even when their variance or size differ. |
 | **p** | Probability of seeing that difference by chance alone. **p < 0.05** is considered significant and is shown in green. |
 | **g (Hedges' g)** | Effect size: about 0.2 is small, 0.5 medium, 0.8 or more large. |
+| **AUC** | How well a signal separates two outcomes: 0.5 is chance, 1.0 is perfect. |
+| **Leave-one-subject-out** | Validation that predicts each subject with a model trained on all the others, to test the signal on unseen data. |
+| **Brier skill** | Improvement of predicted probabilities over always predicting the average rate; above 0 is better. |
+| **CUSUM** | Cumulative sum of changes; it detects a sustained decline rather than one bad value. |
 
 ## 8. Daily check-in and other terms
 | Term | Meaning |

@@ -16,6 +16,7 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 │   ├── src/services/dataset.js   # loads CFT70 and the knowledge base into memory once
 │   ├── src/services/stats.js     # statistics: t tests, CI, Hedges' g, correlation, ICC/MDC, BH, k-means++
 │   ├── src/services/bone.js      # bone densitometry: bone loss by region vs LSC, ranking, subject timeline
+│   ├── src/services/mining.js    # AUC + bootstrap CI, permutation test, LOSO ridge logistic regression, Brier, CUSUM (Erik)
 │   ├── src/services/assessment.js# metric status, cardiac score by region, ASE diastolic, alerts, recommendations
 │   ├── src/services/analytics.js # data mining: group effects, reliability, correlations, predictors, phenotypes
 │   ├── src/routes/subjects.js    # subjects list, subject dashboard, echo table
@@ -37,6 +38,8 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
     ├── FILES_AND_CHANGES.md           # this file
     ├── GLOSSARY.md                    # terms and abbreviations shown in the app
     ├── BONE_DENSITY.md                # bone densitometry: import, relevant parameters and structures
+    ├── FINAL_REPORT.md                # final technical report (computer-science paper format)
+    ├── report/                        # report figures: architecture.png, bone_loss_by_region.png
     └── PROMPTS.md                     # useful prompts for the project
 ```
 
@@ -51,6 +54,8 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 | Updated | `data/schema.sql` (bone tables), `data/queries.sql` (queries 9 and 10) |
 | Not imported | Personal fields, absolute dates, body composition, Ward's triangle, single vertebrae, empty subregion files, screening scans |
 | Frontend | Bone density screen (`ui/views/BoneDensity.jsx`, `domain/bone.js`, `data/bone.js`); guided tour per screen in the app palette (`domain/tour.js`, `ui/components/Tour.jsx`); code moved into layers (`app/`, `ui/`, `domain/`, `data/`, `data/api.js`); ORBIT CARE v2.2 merged |
+| Early warning | `services/mining.js`, `earlyWarningValidation` and `trajectoryAlarm` in `analytics.js`, `trend` recommendation, route `/api/analytics/early-warning` (Erik, PR #2) |
+| Report | `docs/FINAL_REPORT.md` and `docs/report/` figures |
 | Fixes | Gap filling also applied to API data (the echo table failed in production); Countermeasures heart-rate chart asked for `metric=undefined` |
 
 ## Changes in v4 (2026-11-15): real data only and data mining
