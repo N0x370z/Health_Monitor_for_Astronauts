@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLiveVitals } from "./sim/live.js";
 import { loadCheckins, saveCheckins, TODAY } from "./sim/history.js";
 import { ECHO, SUBJECT_IDS, TIMEPOINTS } from "./data/echo.js";
 import { heartState, findings, heartReport, HM, readingText } from "./sim/heart.js";
@@ -43,6 +44,7 @@ export default function App() {
   const subject = ECHO.subjects[subjectId];
   const hs = useMemo(() => heartState(subject, tpKey), [subject, tpKey]);
   const fnd = useMemo(() => findings(subject, tpKey), [subject, tpKey]);
+  const live = useLiveVitals(subject, tpKey);
   const today = history.find((d) => d.day === TODAY);
 
   // Reproducir la línea de tiempo del estudio
@@ -160,7 +162,7 @@ export default function App() {
         <main>
           {tab === "heart" && (
             <HeartMonitor subject={subject} tpKey={tpKey} setTp={(k) => { setPlaying(false); setTpKey(k); }} hs={hs} findings={fnd}
-              onSelectChamber={setChamberKey} selectedChamber={chamberKey} onReport={openReport} playing={playing} onPlay={play} />
+              onSelectChamber={setChamberKey} selectedChamber={chamberKey} onReport={openReport} playing={playing} onPlay={play} live={live} />
           )}
           {tab === "counter" && <Countermeasures onOpenSubject={openSubject} />}
           {tab === "checkin" && <CheckIn history={history} onSubmit={submitCheckin} />}
@@ -177,7 +179,7 @@ export default function App() {
         ))}
       </nav>
 
-      <SystemDrawer system={drawerData} onClose={() => setChamberKey(null)} />
+      <SystemDrawer system={drawerData} onClose={() => setChamberKey(null)} live={live} />
       {report != null && <ReportModal text={report} delay="next comm window" onClose={() => setReport(null)} />}
     </div>
   );
