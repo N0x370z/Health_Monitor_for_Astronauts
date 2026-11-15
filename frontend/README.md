@@ -12,7 +12,7 @@ npm run lint
 ```
 Data comes from the project database through the backend API (`/api/study/cft70/echo-data`). If the API does not answer within 5 s, the app uses the bundled CSV files, so it also works offline. The header shows the source in use. Fonts are bundled locally; check-ins are stored in the browser (`localStorage`).
 
-Local development: run the backend first (`cd ../backend && npm start`); Vite proxies `/api` to `http://localhost:8000`. On Vercel, `api/[...path].js` serves the same API on the same domain. `VITE_API_URL` points the app to an API on another domain.
+Local development: run the backend first (`cd ../backend && npm start`); Vite proxies `/api` to `http://localhost:8000`. On Vercel, `api/index.js` serves the same API on the same domain. `VITE_API_URL` points the app to an API on another domain.
 
 ## Data (offline fallback)
 NASA **BRSMCF CFT70** study: 70 days of head-down tilt bed rest (microgravity analog), 37 subjects, 4 groups (Control, Exercise A, Exercise B, Flywheel). The CSV files in `src/data/echo/` are bundled with the app:
@@ -36,5 +36,5 @@ src/data/        echo.js (API loading with CSV fallback, derived metrics) · con
 src/sim/         heart.js (metric status, chambers, findings, countermeasures) · history.js (check-ins)
 src/components/  Heart.jsx · TimelineChart.jsx · ui.jsx · Emoji.jsx
 src/views/       HeartMonitor · Countermeasures · CheckIn · Panels (drawer)
-api/             [...path].js (Vercel function that runs ../backend)
+api/             index.js (Vercel function that runs ../backend)
 ```

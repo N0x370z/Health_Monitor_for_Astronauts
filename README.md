@@ -32,7 +32,7 @@ Our goal is to **detect these problems early and prevent them**. The monitor fol
 | Layer | Technology |
 |---|---|
 | Frontend | ORBIT CARE: React 19, Vite. Loads the data from the API; falls back to the bundled CFT70 echo CSV files if the API is down |
-| Backend | Node.js 22, built-in modules only (`node:http`, `node:sqlite`). No framework, no dependencies. On Vercel it runs as a function (`frontend/api/[...path].js`) |
+| Backend | Node.js 22, built-in modules only (`node:http`, `node:sqlite`). No framework, no dependencies. On Vercel it runs as a function (`frontend/api/index.js`) |
 | Database | SQLite: `data/health_monitor.sqlite` (schema portable to PostgreSQL) |
 | Data | NASA CFT70 / BRSMCF echocardiography (real) and NASA LSDA evidence (real). No synthetic data |
 
@@ -107,7 +107,7 @@ npm run build           # dist/
 
 ### Deploy on Vercel
 - Project settings: **Root Directory** `frontend`, framework **Vite**, and keep "Include files outside the root directory" enabled (the function reads `backend/` and `data/`). Node 22 is pinned in `frontend/package.json`.
-- `frontend/api/[...path].js` serves the whole API on the same domain (`/api/...`), reading `data/health_monitor.sqlite` in read-only mode.
+- `frontend/api/index.js` serves the whole API on the same domain (`/api/...`; `frontend/vercel.json` routes every `/api/*` path to it), reading `data/health_monitor.sqlite` in read-only mode.
 - To use an API hosted elsewhere, set `VITE_API_URL` in Vercel (for example `https://my-api.example.com`).
 
 ## Environment Variables (backend)

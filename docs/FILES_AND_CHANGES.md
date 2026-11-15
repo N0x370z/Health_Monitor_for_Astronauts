@@ -22,7 +22,7 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 │   ├── src/routes/knowledge.js   # alerts, cardiovascular problems, reference ranges
 │   ├── test/api.test.js          # 19 endpoint tests (node --test)
 │   └── test/stats.test.js        # 8 tests of the statistics module
-├── frontend/                     # ORBIT CARE (React + Vite); api/[...path].js runs the backend on Vercel; see frontend/README.md
+├── frontend/                     # ORBIT CARE (React + Vite); api/index.js runs the backend on Vercel; see frontend/README.md
 ├── data/
 │   ├── health_monitor.sqlite     # ★ the database (versioned)
 │   ├── schema.sql                # schema and views
@@ -60,7 +60,7 @@ Map of the repository and what changed in each version (v4 2026-11-15, v3 2026-1
 | Tests | 9 → 28 |
 
 ### Frontend
-The skeleton was replaced by the team's ORBIT CARE v2 (branch `v2-frontend`, merged keeping its history). It reads the CFT70 echo CSV files bundled in `frontend/src/data/echo/`. Fixes made on integration: analysts coded A1–A3 (the CSV had their names), RVSP with RAP 3 mmHg like the database, README updated to the existing files, NASA logo as favicon (`public/favicon.png`). Connection: `src/data/echo.js` loads `/api/study/cft70/echo-data` at start (CSV files as fallback), Countermeasures reads `/api/study/cft70/effects`, and `api/[...path].js` serves the API on Vercel.
+The skeleton was replaced by the team's ORBIT CARE v2 (branch `v2-frontend`, merged keeping its history). It reads the CFT70 echo CSV files bundled in `frontend/src/data/echo/`. Fixes made on integration: analysts coded A1–A3 (the CSV had their names), RVSP with RAP 3 mmHg like the database, README updated to the existing files, NASA logo as favicon (`public/favicon.png`). Connection: `src/data/echo.js` loads `/api/study/cft70/echo-data` at start (CSV files as fallback), Countermeasures reads `/api/study/cft70/effects`, and `api/index.js` serves the API on Vercel.
 
 ## Changes in v3
 
